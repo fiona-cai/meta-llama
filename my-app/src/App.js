@@ -1,9 +1,11 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import logo from "./logo.png";
 
 function App() {
   const videoRef = useRef(null);
   const [photo, setPhoto] = useState(null);
   const [result, setResult] = useState("");
+  const [loading, setLoading] = useState(true);
 
   const startCamera = () => {
     navigator.mediaDevices
@@ -40,20 +42,65 @@ function App() {
     }
   };
 
-  React.useEffect(() => {
-    startCamera();
+  useEffect(() => {
+    // Simulate a 2-second loading screen
+    const timer = setTimeout(() => {
+      setLoading(false);
+      startCamera();
+    }, 2000);
+
+    return () => clearTimeout(timer);
   }, []);
+
+  if (loading) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+          backgroundColor: "#F7F4F2",
+        }}
+      >
+        <img
+          src={logo} // Replace with your image URL
+          alt="Loading"
+          style={{ marginBottom: "20px" }}
+        />
+        <span
+          style={{
+            color: "#37725F",
+            fontSize: 96,
+            marginLeft: 60,
+            marginRight: 60,
+          }}
+        >
+          {"“See”"}
+        </span>
+      </div>
+    );
+  }
 
   return (
     <div style={{ textAlign: "center" }}>
-      <h1>Camera App</h1>
-      <video ref={videoRef} autoPlay style={{ width: "100%", maxWidth: "500px" }} />
+      <video
+        ref={videoRef}
+        autoPlay
+        style={{ width: "100%", maxWidth: "500px" }}
+        alt="Camera feed" // Alt text for the camera feed
+      />
       <br />
       <button onClick={takePicture}>Take a Picture</button>
       {photo && (
         <div>
           <h3>Your Picture:</h3>
-          <img src={photo} alt="Captured" style={{ width: "100%", maxWidth: "500px" }} />
+          <img
+            src={photo}
+            alt="Captured Photo"
+            style={{ width: "100%", maxWidth: "500px" }}
+          />
           <h3>Detected Object:</h3>
           <p>{result || "Processing..."}</p>
         </div>
