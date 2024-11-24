@@ -138,17 +138,32 @@
                 try {
                     const devices =
                         await navigator.mediaDevices.enumerateDevices();
-                    const camera = devices.find(
+
+                    // Find the rear (environment) camera if available
+                    const environmentCamera = devices.find(
                         (device) =>
                             device.kind === "videoinput" &&
-                            device.label.includes("back")
+                            device.label.toLowerCase().includes("back")
                     );
 
+                    // Find the front-facing camera (user-facing)
+                    const userFacingCamera = devices.find(
+                        (device) =>
+                            device.kind === "videoinput" &&
+                            device.label.toLowerCase().includes("front")
+                    );
+
+                    let selectedCamera = environmentCamera || userFacingCamera; // Default to user-facing if no environment camera found
+
+                    if (!selectedCamera) {
+                        alert("No video devices found");
+                        return;
+                    }
+
                     const stream = await navigator.mediaDevices.getUserMedia({
-                        video: camera
-                            ? { deviceId: camera.deviceId }
-                            : { width: { ideal: 640 }, height: { ideal: 480 } },
+                        video: { deviceId: selectedCamera.deviceId },
                     });
+
                     currentStream = stream;
 
                     const video = document.createElement("video");
