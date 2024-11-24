@@ -222,7 +222,7 @@
             const sendFrame = () => {
                 const imageDataURL = canvas.toDataURL("image/jpeg");
 
-                fetch("https://ray-enhanced-dassie.ngrok-free.app/api/detect", {
+                fetch("/api/detect", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
