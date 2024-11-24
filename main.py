@@ -1,10 +1,18 @@
 from PIL import Image
-from memoripy import MemoryManager, JSONStorage
+import memoripy.memory_manager as MemoryManager
+import memoripy.json_storage as JSONStorage
 import os
 from colorama import Fore, Style, init
+from dotenv import load_dotenv
+
 
 def main():
     init(autoreset=True)  # Initialize colorama
+
+    load_dotenv()
+
+    # Hard coded path if needed
+    image_path = os.getenv('HARD_CODED_PATH')
 
     # Replace with your actual Groq API key
     api_key = os.getenv('GROQ_API_KEY')
@@ -28,13 +36,13 @@ def main():
     embedding_model_name = "mxbai-embed-large"  # Specific embedding model name
 
     # Choose your storage option
-    storage_option = JSONStorage("interaction_history.json")
+    storage_option = JSONStorage.JSONStorage("interaction_history.json")
     # Or use in-memory storage:
     #from memoripy import InMemoryStorage
     #storage_option = InMemoryStorage()
     
     # Initialize the MemoryManager with the selected models and storage
-    memory_manager = MemoryManager(
+    memory_manager = MemoryManager.MemoryManager(
         api_key=api_key,
         chat_model=chat_model,
         chat_model_name=chat_model_name,
@@ -77,8 +85,6 @@ def main():
             print(f"Reasoning: {vision_response.reasoning}")
 
             if vision_response.is_visual:
-                # Use hardcoded image path
-                image_path = r"C:\Users\Henrique\Desktop\stuff.jpeg"
                 try:
                     response = memory_manager.process_visual_request(new_prompt, image_path)
                     print(Fore.CYAN + "\nAssistant (Vision): " + response + Style.RESET_ALL)
@@ -110,8 +116,6 @@ def main():
         relevant_interactions = memory_manager.retrieve_relevant_interactions(processed_prompt, exclude_last_n=5)
 
         if vision_response.is_visual:
-            # Use hardcoded image path
-            image_path = r"C:\Users\Henrique\Desktop\stuff.jpeg"
             try:
                 response = memory_manager.process_visual_request(new_prompt, image_path)
                 print(Fore.CYAN + "\nAssistant (Vision): " + response + Style.RESET_ALL)

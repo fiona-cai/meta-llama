@@ -1,11 +1,8 @@
 # json_storage.py
 
 import json
-import os
 
-from .storage import BaseStorage
-
-class JSONStorage(BaseStorage):
+class JSONStorage():
     def __init__(self, file_path="interaction_history.json"):
         self.file_path = file_path
 
