@@ -154,8 +154,8 @@
                     video.play();
 
                     video.onloadedmetadata = () => {
-                        canvas.width = video.videoWidth / 2; // Reduce resolution for performance
-                        canvas.height = video.videoHeight / 2;
+                        canvas.width = video.videoWidth; // Reduce resolution for performance
+                        canvas.height = video.videoHeight;
 
                         const drawFrame = () => {
                             if (currentStream) {
@@ -222,7 +222,7 @@
             const sendFrame = () => {
                 const imageDataURL = canvas.toDataURL("image/jpeg");
 
-                fetch("/api/detect", {
+                fetch("https://ray-enhanced-dassie.ngrok-free.app/api/detect", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
