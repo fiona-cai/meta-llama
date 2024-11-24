@@ -54,10 +54,11 @@ class SeeProcessor:
 
         print("Welcome to the conversation! (Type 'exit' to end)")
 
-    def generate(self):
-        prompt, language = self.whispermodel.transcribe_audio("/Users/itsmarsss/Documents/see/New Recording 6.wav")
+    def generate(self, image_path, audio_path):
+        prompt, _ = self.whispermodel.transcribe_audio(audio_path)
 
-        print(prompt, language)
+        print(prompt)
+
         new_prompt = prompt #input(Fore.GREEN + "\nYou: " + Style.RESET_ALL).strip()
 
         # Check for core memory update first

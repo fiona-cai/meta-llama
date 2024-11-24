@@ -8,55 +8,72 @@ import see_processor
 import os
 from pydub import AudioSegment
 
-#processor = see_processor.SeeProcessor()
+processor = see_processor.SeeProcessor()
 
 async def post_handler(request):
     try:
         data = await request.json()
-        audio_url = data['audio_url']
         image_url = data['image_url']
+        audio_url = data['audio_url']
 
-        print(audio_url, image_url)
+        print(not audio_url is None, not image_url is None)
 
-        convert_and_process_audio(audio_url)
+        convert_and_process(audio_url, image_url)
 
         return web.Response(text=str("received"), status=200)
     except ValueError as e:
         print(e)
         return web.Response(text=str(e), status=500)
-    
-def convert_and_process_audio(data_url, output_filename="audio.wav"):
+
+def convert_and_process(audio_data_url, image_data_url, audio_output="audio.wav", image_output="image.jpeg"):
     try:
-        # Strip the metadata prefix
-        if data_url.startswith("data:audio/webm;base64,"):
-            base64_audio = data_url.split(",")[1]
+        # Convert audio (data:audio/webm;base64 to .wav)
+        if audio_data_url.startswith("data:audio/webm;base64,"):
+            base64_audio = audio_data_url.split(",")[1]
+            audio_data = base64.b64decode(base64_audio)
+
+            # Temporary .webm audio file
+            temp_audio_file = "temp_audio.webm"
+            with open(temp_audio_file, "wb") as audio_file:
+                audio_file.write(audio_data)
+
+            # Convert .webm to .wav using pydub
+            audio = AudioSegment.from_file(temp_audio_file, format="webm")
+            audio.export(audio_output, format="wav")
+            audio_absolute_path = os.path.abspath(audio_output)
+            print(f"Audio saved as {audio_absolute_path}.")
         else:
-            raise ValueError("Invalid data URL format.")
+            raise ValueError("Invalid audio data URL format.")
 
-        # Decode the base64 audio data
-        audio_data = base64.b64decode(base64_audio)
+        # Convert image (data:image/jpeg;base64 to .jpeg)
+        if image_data_url.startswith("data:image/jpeg;base64,"):
+            base64_image = image_data_url.split(",")[1]
+            image_data = base64.b64decode(base64_image)
 
-        # Temporary .webm file
-        temp_webm_file = "temp_audio.webm"
-        with open(temp_webm_file, "wb") as webm_file:
-            webm_file.write(audio_data)
+            # Save the JPEG image directly
+            with open(image_output, "wb") as image_file:
+                image_file.write(image_data)
+            image_absolute_path = os.path.abspath(image_output)
+            print(f"Image saved as {image_absolute_path}.")
+        else:
+            raise ValueError("Invalid image data URL format.")
 
-        # Convert .webm to .wav using pydub
-        audio = AudioSegment.from_file(temp_webm_file, format="webm")
-        audio.export(output_filename, format="wav")
-        print(f"Audio saved as {output_filename}.")
-
-        # Process the audio file (Replace this with your logic)
-        # process_audio(output_filename)
+        # Process the audio and image files (replace with your actual logic)
+        process_files(image_output, audio_output)
 
     finally:
-        print("done")
         # Clean up temporary files
-        # if os.path.exists(temp_webm_file):
-        #     os.remove(temp_webm_file)
-        # if os.path.exists(output_filename):
-        #     os.remove(output_filename)
-        # print("Temporary files deleted.")
+        if os.path.exists(audio_output):
+            os.remove(audio_output)
+        if os.path.exists(image_output):
+            os.remove(image_output)
+        if os.path.exists("temp_audio.webm"):
+            os.remove("temp_audio.webm")
+        print("Temporary files deleted.")
+
+def process_files(audio_file, image_file):
+    print("Pass files into processor.")
+    processor.generate(audio_file, image_file)
 
 app = web.Application()
 app.router.add_post("/api/detect", post_handler)
