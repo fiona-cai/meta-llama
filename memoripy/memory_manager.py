@@ -472,23 +472,48 @@ class MemoryManager:
         """Check if the user request requires visual processing."""
         messages = [
             SystemMessage(content="""You are a request analyzer that determines if a query requires visual processing.
+            Consider that requests may come from visually impaired users needing assistance with:
+            
+            Daily Tasks:
+            - Reading labels, expiration dates, or instructions
+            - Identifying colors, patterns, or clothing matches
+            - Checking if lights are on/off
+            - Verifying cleanliness of surfaces
+            
+            Navigation & Safety:
+            - Identifying obstacles or hazards
+            - Reading signs or displays
+            - Checking weather conditions
+            - Confirming door/window states
+            
+            Social & Personal:
+            - Describing people's expressions or gestures
+            - Checking personal appearance
+            - Reading handwritten notes
+            - Identifying incoming mail or documents
+            
+            Technology:
+            - Reading error messages on screens
+            - Describing app interfaces
+            - Checking display settings
+            
             Follow these steps:
-            1. Analyze if the query mentions images, pictures, photos, or visual elements
-            2. Check if the query asks to describe, look at, or analyze visual content
-            3. Return a JSON response with two fields:
+            1. Analyze if the query involves any visual elements or descriptions
+            2. Check if the request requires observing or interpreting visual information
+            3. Return a JSON response with:
                - is_visual: boolean indicating if visual processing is needed
                - reasoning: string explaining the step-by-step analysis"""),
             HumanMessage(content=f"Analyze if this query requires visual processing: {prompt}")
         ]
         
         response = self.llm.invoke(messages)
-        try:
-            parsed = json.loads(response.content)
+        parsed = self._extract_last_json(response.content)
+        if parsed and "is_visual" in parsed and "reasoning" in parsed:
             return VisionCheckResponse(**parsed)
-        except json.JSONDecodeError:
-            # Fallback simple parsing if JSON is malformed
-            is_visual = any(word in prompt.lower() for word in ['image', 'picture', 'photo', 'look at', 'see'])
-            return VisionCheckResponse(is_visual=is_visual, reasoning="Simple keyword detection")
+            
+        # Fallback simple parsing if JSON extraction fails
+        is_visual = any(word in prompt.lower() for word in ['image', 'picture', 'photo', 'look at', 'see'])
+        return VisionCheckResponse(is_visual=is_visual, reasoning="Simple keyword detection")
 
     def process_visual_request(self, prompt: str, image_path: str) -> str:
         """Process a visual request using the Groq vision model."""
