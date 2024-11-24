@@ -6,11 +6,17 @@ import ollama
 from groq import Groq
 from langchain_groq import ChatGroq
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+from PIL import Image
 import base64
+import faster_whisper
+
+from whisper.whispermodel import WhisperTranscriber
 
 from .memory_store import MemoryStore
 
 from langchain_ollama import ChatOllama
+from langchain_core.output_parsers import JsonOutputParser
+from langchain_core.prompts import PromptTemplate
 from pydantic import BaseModel, Field
 from langchain_core.messages import HumanMessage, SystemMessage
 from typing import Optional
@@ -185,27 +191,34 @@ class MemoryManager:
                {json.dumps(self.memory_store.core_memory, indent=2)}
             3. Explain what existing keys should be changed and why
             4. Return a JSON object with 'attribute_key', 'attribute_value', and 'description'"""),
-            HumanMessage(content=f"Think step by step about how to parse this text into core memory: {text}")
+            HumanMessage(content=f"User's specific request: {text}")
         ]
 
         response = self.llm.invoke(messages)
         print(f"Response from core memory parsing: {response.content}")
-        parsed = self._extract_last_json(response.content)
         
-        if not parsed or not all(k in parsed for k in ["attribute_key", "attribute_value", "description"]):
-            return None
+        attempts = 0
+        max_attempts = 7
+        while attempts < max_attempts:
+            parsed = self._extract_last_json(response.content)
+            if parsed and all(k in parsed for k in ["attribute_key", "attribute_value", "description"]):
+                # Add embedding and concepts for the new core memory
+                embedding = self.get_embedding(f"{parsed['attribute_key']} {parsed['attribute_value']}")
+                concepts = self.extract_concepts(f"{parsed['attribute_key']} {parsed['attribute_value']}")
+                
+                parsed.update({
+                    "embedding": embedding.tolist(),
+                    "timestamp": time.time(),
+                    "concepts": concepts
+                })
+                return parsed
             
-        # Add embedding and concepts for the new core memory
-        embedding = self.get_embedding(f"{parsed['attribute_key']} {parsed['attribute_value']}")
-        concepts = self.extract_concepts(f"{parsed['attribute_key']} {parsed['attribute_value']}")
-        
-        parsed.update({
-            "embedding": embedding.tolist(),
-            "timestamp": time.time(),
-            "concepts": concepts
-        })
-        
-        return parsed
+            attempts += 1
+            if attempts < max_attempts:
+                print(f"Retry {attempts} - Invalid JSON format, retrying...")
+                response = self.llm.invoke(messages)
+                
+        return None
 
     def store_core_memory(self, text: str, use_semantic: bool = False, semantic_threshold: float = 75.0) -> tuple[bool, str]:
         core_memory_triggers = [
@@ -311,15 +324,21 @@ class MemoryManager:
             ]
 
         response = self.llm.invoke(messages)
-        json_data = self._extract_last_json(response.content)
         
-        if not json_data or "concepts" not in json_data:
-            print("Failed to extract concepts in valid JSON format")
-            return []
-
-        concepts = json_data["concepts"]
-        print(f"Concepts extracted: {concepts}")
-        return concepts
+        # Add retry logic for JSON extraction
+        attempts = 0
+        max_attempts = 5
+        while attempts < max_attempts:
+            json_data = self._extract_last_json(response.content)
+            if json_data and "concepts" in json_data:
+                return json_data["concepts"]
+            attempts += 1
+            if attempts < max_attempts:
+                print(f"Retry {attempts} - Invalid JSON format, retrying...")
+                response = self.llm.invoke(messages)
+        
+        print(f"Failed to extract concepts after {max_attempts} attempts")
+        return []
 
     def get_predefined_memories(self):
         """Return predefined memories to initialize the system with."""
@@ -416,7 +435,7 @@ class MemoryManager:
             # Add context from retrievals and interactions
             processed_retrievals = []
             for retrieval in retrievals:
-                for msg in retrieval.messages:
+                for msg in retrieval.get("messages", []):
                     # Convert complex content structure to simple string
                     if isinstance(msg.get("content"), list):
                         content = msg["content"][0].get("text", "")
@@ -433,7 +452,7 @@ class MemoryManager:
                 for interaction in context_interactions:
                     for msg in interaction.get("messages", []):
                         if isinstance(msg.get("content"), list):
-                            content = msg.get("content")[0].get("text", "")
+                            content = msg["content"][0].get("text", "")
                         else:
                             content = msg.get("content", "")
                         messages.append({
@@ -529,25 +548,23 @@ class MemoryManager:
             if prompt=="":
                 prompt="User just wants a description"
             descriptive_prompt = f"""As {core_memory.get('assistant_name')}, I am assisting a user named {core_memory.get('user_name')}. 
-            
-            Please provide a detailed and clear description that would help someone who cannot see. My persona is {core_memory.get('persona')}.
 
-            Focus on these aspects in your analysis:
-            1. Main subjects and their spatial relationships
-            2. Colors, textures, and lighting
-            3. Important details that might not be immediately obvious
-            4. Text or symbols if present
-            5. Context and setting
-            6. Any potential safety concerns or important warnings
+Focus on these aspects in your analysis:
+1. Main subjects and their spatial relationships
+2. Colors, textures, and lighting
+3. Important details that might not be immediately obvious
+4. Text or symbols if present
+5. Context and setting
+6. Any potential safety concerns or important warnings
 
-            Format your description in a way that would be helpful for someone who needs visual assistance.
-            User's specific request: {prompt}
+Format your description in a way that would be helpful for someone who needs visual assistance.
+User's specific request: {prompt}
 
-            Return your response in the following JSON format:
-            {{
-                "description": "A detailed description of what you see in the image",
-                "direct_answer": "A focused answer to the user's specific question in their language of choice",
-            }}"""
+Return your response in the following JSON format:
+{{
+"description": "A detailed description of what you see in the image",
+"direct_answer": "A focused and concise answer to the user's specific question in their language of choice",
+}}"""
             print(f"Descriptive prompt: {descriptive_prompt}")
             completion = self.groq_client.chat.completions.create(
                 model=self.vision_model_name,
@@ -575,10 +592,38 @@ class MemoryManager:
             )
             
             # Extract JSON from response
-            parsed_response = self._extract_last_json(completion.choices[0].message.content)
-            print(f"Vision processing response: {parsed_response}")
-            if parsed_response and "direct_answer" in parsed_response:
-                return parsed_response["direct_answer"]
+            attempts = 0
+            max_attempts = 5
+            while attempts < max_attempts:
+                parsed_response = self._extract_last_json(completion.choices[0].message.content)
+                if parsed_response and "direct_answer" in parsed_response:
+                    return parsed_response["direct_answer"]
+                
+                attempts += 1
+                if attempts < max_attempts:
+                    print(f"Retry {attempts} - Invalid JSON format, retrying...")
+                    completion = self.groq_client.chat.completions.create(
+                        model=self.vision_model_name,
+                        messages=[
+                            {
+                                "role": "user",
+                                "content": [
+                                    {"type": "text", "text": descriptive_prompt},
+                                    {
+                                        "type": "image_url",
+                                        "image_url": {
+                                            "url": f"data:image/jpeg;base64,{self.encode_image_to_base64(image_path)}"
+                                        }
+                                    }
+                                ]
+                            }
+                        ],
+                        temperature=0.2,
+                        max_tokens=1024,
+                        top_p=.5,
+                        stream=False
+                    )
+            
             return completion.choices[0].message.content
 
         except Exception as e:

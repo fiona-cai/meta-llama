@@ -69,7 +69,7 @@ def process_files(audio_file, image_file):
 
 app = web.Application()
 app.router.add_post("/api/detect", post_handler)
-app.add_routes([web.static('/', "./frontend", show_index=True)])
+#app.add_routes([web.static('/', "./frontend", show_index=True)])
 
 if __name__ == '__main__':
     web.run_app(app)
