@@ -28,13 +28,13 @@ class JSONStorage():
         # Save short-term memory interactions with all data
         for idx in range(len(memory_store.short_term_memory)):
             history_entry = {
-                'id': memory_store.short_term_memory[idx]['id'],
-                'messages': memory_store.short_term_memory[idx]['messages'],
-                'embedding': memory_store.embeddings[idx].flatten().tolist(),
-                'timestamp': memory_store.timestamps[idx],
-                'access_count': memory_store.access_counts[idx],
-                'concepts': list(memory_store.concepts_list[idx]),
-                'decay_factor': memory_store.short_term_memory[idx].get('decay_factor', 1.0)
+                'id': memory_store.short_term_memory[idx].id,
+                'messages': memory_store.short_term_memory[idx].messages,
+                'embedding': memory_store.short_term_memory[idx].embeddings.flatten().tolist(),
+                'timestamp': memory_store.short_term_memory[idx].timestamp,
+                'access_count': memory_store.short_term_memory[idx].access_count,
+                'concepts': list(memory_store.short_term_memory[idx].concepts_list),
+                'decay_factor': memory_store.short_term_memory[idx].decay_factor
             }
             history["short_term_memory"].append(history_entry)
 

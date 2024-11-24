@@ -1,9 +1,5 @@
 import numpy as np
 from scipy.io.wavfile import write
-import tempfile
-import os
-import time
-import pyaudio
 from .setup_whisper import setup_whisper
 
 class WhisperTranscriber:

@@ -1,4 +1,3 @@
-from PIL import Image
 import memoripy.memory_manager as MemoryManager
 import memoripy.json_storage as JSONStorage
 import whisper.whispermodel as WhisperModel

@@ -6,17 +6,11 @@ import ollama
 from groq import Groq
 from langchain_groq import ChatGroq
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
-from PIL import Image
 import base64
-import faster_whisper
-
-from whisper.whispermodel import WhisperTranscriber
 
 from .memory_store import MemoryStore
 
 from langchain_ollama import ChatOllama
-from langchain_core.output_parsers import JsonOutputParser
-from langchain_core.prompts import PromptTemplate
 from pydantic import BaseModel, Field
 from langchain_core.messages import HumanMessage, SystemMessage
 from typing import Optional
@@ -422,7 +416,7 @@ class MemoryManager:
             # Add context from retrievals and interactions
             processed_retrievals = []
             for retrieval in retrievals:
-                for msg in retrieval.get("messages", []):
+                for msg in retrieval.messages:
                     # Convert complex content structure to simple string
                     if isinstance(msg.get("content"), list):
                         content = msg["content"][0].get("text", "")
