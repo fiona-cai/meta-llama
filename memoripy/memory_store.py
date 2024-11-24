@@ -25,13 +25,34 @@ class MemoryStore:
         self.core_memory = {
             "user_name": "User",
             "assistant_name": "Assistant",
-            "personality": "Helpful and friendly"
+            "persona": "helpful and professional",
         }
 
+    def add_core_memory(self, interaction):
+        """Add or update core memory attributes."""
+        key = interaction.get("attribute_key")
+        value = interaction.get("attribute_value")
+        
+        if key in ["user_name", "assistant_name", "persona"]:
+            self.core_memory[key] = value
+        else:
+            print(f"Attribute key '{key}' is not supported for core memory.")
     def add_interaction(self, interaction):
         interaction_id = interaction['id']
-        prompt = interaction['prompt']
-        output = interaction['output']
+        
+        # Handle new message structure or fallback to old format
+        if 'messages' in interaction:
+            # Extract prompt and output from messages
+            user_message = next((m for m in interaction['messages'] if m['role'] == 'user'), None)
+            assistant_message = next((m for m in interaction['messages'] if m['role'] == 'assistant'), None)
+            
+            prompt = user_message['content'][0]['text'] if user_message else ''
+            output = assistant_message['content'][0]['text'] if assistant_message else ''
+        else:
+            # Fallback for old format
+            prompt = interaction.get('prompt', '')
+            output = interaction.get('output', '')
+
         embedding = np.array(interaction['embedding']).reshape(1, -1)
         timestamp = interaction.get('timestamp', time.time())  # Use current time if 'timestamp' is missing
         access_count = interaction.get('access_count', 1)
@@ -42,8 +63,10 @@ class MemoryStore:
         # Save the interaction data to short-term memory
         self.short_term_memory.append({
             "id": interaction_id,
-            "prompt": prompt,
-            "output": output,
+            "messages": interaction.get('messages', [
+                {"role": "user", "content": [{"type": "text", "text": prompt}]},
+                {"role": "assistant", "content": [{"type": "text", "text": output}]}
+            ]),
             "timestamp": timestamp,
             "access_count": access_count,
             "decay_factor": decay_factor
@@ -78,6 +101,31 @@ class MemoryStore:
             if access_count > 10 and self.short_term_memory[idx] not in self.long_term_memory:
                 self.long_term_memory.append(self.short_term_memory[idx])
                 print(f"Moved interaction {self.short_term_memory[idx]['id']} to long-term memory.")
+
+    def retrieve(self, query_embedding, query_concepts, similarity_threshold=40, exclude_last_n=0):
+        all_memories = []
+        
+        # Get short-term memories
+        if len(self.short_term_memory) > 0:
+            short_term_results = self._retrieve_from_memory_type(
+                query_embedding, query_concepts, 
+                self.short_term_memory, self.embeddings,
+                similarity_threshold, exclude_last_n
+            )
+            all_memories.extend(short_term_results)
+
+        # Get long-term memories
+        if len(self.long_term_memory) > 0:
+            long_term_results = self._retrieve_from_memory_type(
+                query_embedding, query_concepts,
+                self.long_term_memory, self.long_term_embeddings,
+                similarity_threshold, 0
+            )
+            all_memories.extend(long_term_results)
+
+        # Sort all memories by relevance score
+        all_memories.sort(key=lambda x: x.get('total_score', 0), reverse=True)
+        return all_memories[:10]  # Return top 10 most relevant memories
 
     def retrieve(self, query_embedding, query_concepts, similarity_threshold=40, exclude_last_n=0):
         if len(self.short_term_memory) == 0:
@@ -118,7 +166,7 @@ class MemoryStore:
                 self.timestamps[idx] = current_time
                 self.short_term_memory[idx]['timestamp'] = current_time
                 self.short_term_memory[idx]['access_count'] = self.access_counts[idx]
-                print(f"[DEBUG] Updated access count for interaction {self.short_term_memory[idx]['id']}: {self.access_counts[idx]}")
+                #print(f"[DEBUG] Updated access count for interaction {self.short_term_memory[idx]['id']}: {self.access_counts[idx]}")
 
                 # Move interaction to long-term memory if access count exceeds 10
                 if self.access_counts[idx] > 10:
@@ -242,12 +290,3 @@ class MemoryStore:
 
         print(f"Retrieved {len(semantic_interactions)} interactions from the best matching cluster.")
         return semantic_interactions
-
-    def update_core_memory(self, key: str, value: str):
-        """Update a core memory value."""
-        self.core_memory[key] = value
-        print(f"Core memory updated - {key}: {value}")
-
-    def get_core_memory(self, key: str, default: str = None) -> str:
-        """Retrieve a core memory value."""
-        return self.core_memory.get(key, default)

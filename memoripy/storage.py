@@ -2,15 +2,9 @@
 
 class BaseStorage:
     def load_history(self):
+        """Should return (short_term, long_term, core_memory)"""
         raise NotImplementedError("The method load_history() must be implemented.")
 
     def save_memory_to_history(self, memory_store):
+        """Should save short_term, long_term, and core_memory"""
         raise NotImplementedError("The method save_memory_to_history() must be implemented.")
-
-    def save_core_memory(self, core_memory):
-        """Save core memory to storage."""
-        raise NotImplementedError("The method save_core_memory() must be implemented.")
-
-    def load_core_memory(self):
-        """Load core memory from storage."""
-        raise NotImplementedError("The method load_core_memory() must be implemented.")

@@ -10,52 +10,64 @@ class JSONStorage(BaseStorage):
         self.file_path = file_path
 
     def load_history(self):
-        if os.path.exists(self.file_path):
+        try:
             with open(self.file_path, 'r') as f:
-                print("[Storage] Loading existing interaction history from JSON...")
-                try:
-                    history = json.load(f)
-                    # Return the entire history dict
-                    return history
-                except json.JSONDecodeError:
-                    print("[Storage] Error: Invalid JSON format in history file")
-                    return None
-        print("[Storage] No existing interaction history found.")
-        return None
+                history = json.load(f)
+            return (
+                history.get("short_term_memory", []),
+                history.get("long_term_memory", []),
+                history.get("core_memory", [])
+            )
+        except FileNotFoundError:
+            return [], [], []
 
     def save_memory_to_history(self, memory_store):
-        try:
-            history = {
-                "core_memory": memory_store.core_memory.copy(),  # Make a copy to avoid reference issues
-                "short_term_memory": [],
-                "long_term_memory": []
+        history = {
+            "short_term_memory": [],
+            "long_term_memory": [],
+            "core_memory": []
+        }
+
+        # Save short-term memory interactions with all data
+        for idx in range(len(memory_store.short_term_memory)):
+            history_entry = {
+                'id': memory_store.short_term_memory[idx]['id'],
+                'messages': memory_store.short_term_memory[idx]['messages'],
+                'embedding': memory_store.embeddings[idx].flatten().tolist(),
+                'timestamp': memory_store.timestamps[idx],
+                'access_count': memory_store.access_counts[idx],
+                'concepts': list(memory_store.concepts_list[idx]),
+                'decay_factor': memory_store.short_term_memory[idx].get('decay_factor', 1.0)
             }
+            history["short_term_memory"].append(history_entry)
 
-            # Save short-term memory interactions
-            for idx in range(len(memory_store.short_term_memory)):
-                interaction = {
-                    'id': memory_store.short_term_memory[idx]['id'],
-                    'prompt': memory_store.short_term_memory[idx]['prompt'],
-                    'output': memory_store.short_term_memory[idx]['output'],
-                    'embedding': memory_store.embeddings[idx].flatten().tolist(),
-                    'timestamp': memory_store.timestamps[idx],
-                    'access_count': memory_store.access_counts[idx],
-                    'concepts': list(memory_store.concepts_list[idx]),
-                    'decay_factor': memory_store.short_term_memory[idx].get('decay_factor', 1.0)
-                }
-                history["short_term_memory"].append(interaction)
+        # Save long-term memory interactions with all data
+        for idx in range(len(memory_store.long_term_memory)):
+            history_entry = {
+                'id': memory_store.long_term_memory[idx]['id'],
+                'messages': memory_store.long_term_memory[idx]['messages'],
+                'embedding': memory_store.long_term_embeddings[idx].flatten().tolist(),
+                'timestamp': memory_store.long_term_timestamps[idx],
+                'access_count': memory_store.long_term_access_counts[idx],
+                'concepts': list(memory_store.long_term_concepts[idx]),
+                'decay_factor': memory_store.long_term_memory[idx].get('decay_factor', 1.0)
+            }
+            history["long_term_memory"].append(history_entry)
 
-            # Save long-term memory interactions
-            history["long_term_memory"].extend(memory_store.long_term_memory)
+        # Save core memory with complete data
+        #for idx in range(len(memory_store.core_embeddings)):
+        #    history_entry = {
+        #        'embedding': memory_store.core_embeddings[idx].flatten().tolist(),
+        #        'timestamp': memory_store.core_timestamps[idx],
+        #        'concepts': list(memory_store.core_concepts[idx]),
+        #        'attribute_key': memory_store.core_memory.get('attribute_key', ''),
+        #        'attribute_value': memory_store.core_memory.get('attribute_value', ''),
+        #    }
+        #    history["core_memory"].append(history_entry)
 
-            # Save the history to a file atomically
-            temp_file = f"{self.file_path}.tmp"
-            with open(temp_file, 'w') as f:
-                json.dump(history, f, indent=4)
-            os.replace(temp_file, self.file_path)  # Atomic operation
-            
-            print(f"[Storage] Saved memory state. Core: {history['core_memory']}")
-            print(f"[Storage] Memory size - Short-term: {len(history['short_term_memory'])}, Long-term: {len(history['long_term_memory'])}")
-            
-        except Exception as e:
-            print(f"[Storage] Error saving memory state: {str(e)}")
+        # Also save current core memory state
+        history["core_memory_state"] = memory_store.core_memory
+
+        with open(self.file_path, 'w') as f:
+            json.dump(history, f, indent=4)
+        print(f"Saved interaction history to JSON. Short-term: {len(history['short_term_memory'])}, Long-term: {len(history['long_term_memory'])}")
