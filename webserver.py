@@ -65,12 +65,12 @@ def convert_and_process(audio_data_url, image_data_url, audio_output="audio.wav"
 
     finally:
         # Clean up temporary files
-        if os.path.exists(audio_output):
-            os.remove(audio_output)
-        if os.path.exists(image_output):
-            os.remove(image_output)
-        if os.path.exists("temp_audio.webm"):
-            os.remove("temp_audio.webm")
+        # if os.path.exists(audio_output):
+        #     os.remove(audio_output)
+        # if os.path.exists(image_output):
+        #     os.remove(image_output)
+        # if os.path.exists("temp_audio.webm"):
+        #     os.remove("temp_audio.webm")
         print("Temporary files deleted.")
 
 def process_files(audio_file, image_file):
