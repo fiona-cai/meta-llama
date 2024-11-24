@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Image Processing</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                padding: 20px;
+                margin: 0;
+                background-color: #f4f4f4;
+            }
+            h2 {
+                text-align: center;
+                color: #333;
+            }
+            button {
+                margin: 10px;
+                padding: 10px 20px;
+                font-size: 16px;
+                cursor: pointer;
+                border: none;
+                background-color: #007bff;
+                color: white;
+                border-radius: 5px;
+                transition: background-color 0.3s ease;
+            }
+            button:hover {
+                background-color: #0056b3;
+            }
+            video {
+                width: 100%;
+                max-width: 500px;
+                margin-top: 20px;
+                border-radius: 5px;
+                border: 2px solid #ddd;
+            }
+            #response-container {
+                margin-top: 20px;
+                width: 100%;
+                max-width: 600px;
+                background-color: #fff;
+                padding: 20px;
+                border-radius: 5px;
+                box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+                color: #333;
+                font-size: 14px;
+            }
+            #response-container pre {
+                white-space: pre-wrap;
+                word-wrap: break-word;
+                font-family: monospace;
+                background: #f9f9f9;
+                padding: 10px;
+                border: 1px solid #ddd;
+                border-radius: 5px;
+                overflow-x: auto;
+            }
+        </style>
+    </head>
+    <body>
+        <h2>Stream Webcam</h2>
+        <button id="start-front-camera" onclick="startWebcam('user')">
+            Start Front Camera
+        </button>
+        <button id="start-back-camera" onclick="startWebcam('environment')">
+            Start Back Camera
+        </button>
+        <button id="start-recording" onclick="startRecording()">
+            Record Audio
+        </button>
+        <button id="send-frame" onclick="sendFrame()">Send Frame</button>
+        <video id="webcam" autoplay playsinline></video>
+
+        <div id="response-container">
+            <h3>API Response:</h3>
+            <pre id="api-response">No response yet.</pre>
+        </div>
+
+        <script>
+            const video = document.getElementById("webcam");
+            const apiResponseElement = document.getElementById("api-response");
+            const startFrontCameraButton =
+                document.getElementById("start-front-camera");
+            const startBackCameraButton =
+                document.getElementById("start-back-camera");
+            const startRecordingButton =
+                document.getElementById("start-recording");
+            const sendFrameButton = document.getElementById("send-frame");
+
+            let currentStream;
+            let mediaRecorder;
+            let audioChunks = [];
+            let audioDataURL = "";
+
+            const startWebcam = async (facingMode = "user") => {
+                if (location.protocol !== "https:") {
+                    alert("Webcam access requires HTTPS");
+                    return;
+                }
+
+                if (currentStream) {
+                    currentStream.getTracks().forEach((track) => track.stop());
+                }
+
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({
+                        video: { facingMode },
+                    });
+                    video.srcObject = stream;
+                    currentStream = stream;
+                    if (facingMode === "user") {
+                        startFrontCameraButton.textContent =
+                            "Front Camera Started";
+                    } else {
+                        startBackCameraButton.textContent =
+                            "Back Camera Started";
+                    }
+                } catch (error) {
+                    alert("Error accessing webcam: " + error.message);
+                }
+            };
+
+            const startRecording = async () => {
+                if (!mediaRecorder || mediaRecorder.state === "inactive") {
+                    try {
+                        const stream =
+                            await navigator.mediaDevices.getUserMedia({
+                                audio: true,
+                            });
+                        mediaRecorder = new MediaRecorder(stream);
+                        mediaRecorder.ondataavailable = (event) => {
+                            audioChunks.push(event.data);
+                        };
+                        mediaRecorder.onstop = () => {
+                            const blob = new Blob(audioChunks, {
+                                type: "audio/webm",
+                            });
+                            audioChunks = [];
+                            const reader = new FileReader();
+                            reader.onloadend = () => {
+                                audioDataURL = reader.result;
+                                startRecordingButton.textContent =
+                                    "Audio Recording Completed";
+                            };
+                            reader.readAsDataURL(blob);
+                        };
+                        mediaRecorder.start();
+                        startRecordingButton.textContent = "Recording Audio...";
+                    } catch (error) {
+                        alert("Error accessing microphone: " + error.message);
+                    }
+                } else {
+                    mediaRecorder.stop();
+                    startRecordingButton.textContent = "Start Recording";
+                }
+            };
+
+            const sendFrame = () => {
+                const canvas = document.createElement("canvas");
+                const context = canvas.getContext("2d");
+
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                const dataURL = canvas.toDataURL("image/jpeg");
+
+                const positions = {
+                    0: [0, 0],
+                    1: [100, 100],
+                };
+
+                fetch("/api/detect", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        image_url: dataURL,
+                        audio_url: audioDataURL,
+                        positions: positions,
+                    }),
+                })
+                    .then((response) => {
+                        if (!response.ok) {
+                            throw new Error("Network response was not ok");
+                        }
+                        return response.text();
+                    })
+                    .then((data) => {
+                        console.log("API Response:", data);
+                        apiResponseElement.textContent = data;
+                    })
+                    .catch((error) => {
+                        console.error("Error calling /api/detect:", error);
+                        apiResponseElement.textContent = `Error: ${error.message}`;
+                    });
+            };
+        </script>
+    </body>
+</html>
