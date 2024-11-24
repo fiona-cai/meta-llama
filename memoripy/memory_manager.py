@@ -433,7 +433,7 @@ class MemoryManager:
                 for interaction in context_interactions:
                     for msg in interaction.get("messages", []):
                         if isinstance(msg.get("content"), list):
-                            content = msg["content"][0].get("text", "")
+                            content = msg.get("content")[0].get("text", "")
                         else:
                             content = msg.get("content", "")
                         messages.append({
@@ -452,9 +452,9 @@ class MemoryManager:
                 completion = self.groq_client.chat.completions.create(
                     model=self.chat_model_name,
                     messages=messages,
-                    temperature=0.0,
+                    temperature=0.2,
                     max_tokens=1024,
-                    top_p=1,
+                    top_p=.5,
                     stream=False
                 )
                 return completion.choices[0].message.content
@@ -475,6 +475,9 @@ class MemoryManager:
 
     def check_visual_request(self, prompt: str) -> VisionCheckResponse:
         """Check if the user request requires visual processing."""
+        if prompt=="":
+            return VisionCheckResponse(is_visual=True, reasoning="Silent prompt")
+        
         messages = [
             SystemMessage(content="""You are a request analyzer that determines if the user is asking for visual guidance.
             Consider that requests may come from visually impaired users needing assistance with:
@@ -521,10 +524,14 @@ class MemoryManager:
     def process_visual_request(self, prompt: str, image_path: str) -> str:
         """Process a visual request using the Groq vision model."""
         try:
-            # Get core memory values
-            descriptive_prompt = f"""As {self.memory_store.core_memory.get('assistant_name', 'Assistant')}, with a {self.memory_store.core_memory.get('persona', 'helpful')} persona, I am assisting {self.memory_store.core_memory.get('user_name', 'User')}.
+            # Dynamically get all core memory values
+            core_memory = self.memory_store.core_memory
+            if prompt=="":
+                prompt="User just wants a description"
+            descriptive_prompt = f"""As {core_memory.get('assistant_name')}, I am assisting a user named {core_memory.get('user_name')}. 
             
-            Please provide a detailed and clear description of the image using descriptive language that matches my persona. 
+            Please provide a detailed and clear description that would help someone who cannot see. My persona is {core_memory.get('persona')}.
+
             Focus on these aspects in your analysis:
             1. Main subjects and their spatial relationships
             2. Colors, textures, and lighting
@@ -532,12 +539,16 @@ class MemoryManager:
             4. Text or symbols if present
             5. Context and setting
             6. Any potential safety concerns or important warnings
-            
-            Format your description in a way that would be helpful for someone who cannot see the image.
-            Maintain a {self.memory_store.core_memory.get('persona', 'helpful')} tone throughout the description.
-            
-            {self.memory_store.core_memory.get('user_name', 'User')}'s specific request: {prompt}"""
 
+            Format your description in a way that would be helpful for someone who needs visual assistance.
+            User's specific request: {prompt}
+
+            Return your response in the following JSON format:
+            {{
+                "description": "A detailed description of what you see in the image",
+                "direct_answer": "A focused answer to the user's specific question in their language of choice",
+            }}"""
+            print(f"Descriptive prompt: {descriptive_prompt}")
             completion = self.groq_client.chat.completions.create(
                 model=self.vision_model_name,
                 messages=[
@@ -557,12 +568,17 @@ class MemoryManager:
                         ]
                     }
                 ],
-                temperature=0.0,
+                temperature=0.2,
                 max_tokens=1024,
-                top_p=1,
+                top_p=.5,
                 stream=False
             )
             
+            # Extract JSON from response
+            parsed_response = self._extract_last_json(completion.choices[0].message.content)
+            print(f"Vision processing response: {parsed_response}")
+            if parsed_response and "direct_answer" in parsed_response:
+                return parsed_response["direct_answer"]
             return completion.choices[0].message.content
 
         except Exception as e:
