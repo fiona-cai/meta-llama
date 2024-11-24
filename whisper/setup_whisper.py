@@ -1,9 +1,10 @@
 from faster_whisper import WhisperModel
+import torch
 
 # Constants for Configuration
 MODEL_SIZE = "large-v3"
 SAMPLE_RATE = 44100
-DEVICE = "cpu"
+DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 COMPUTE_TYPE = "int8"
 
 
