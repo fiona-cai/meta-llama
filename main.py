@@ -1,6 +1,7 @@
 from PIL import Image
 import memoripy.memory_manager as MemoryManager
 import memoripy.json_storage as JSONStorage
+import whisper.whispermodel as WhisperModel
 import os
 from colorama import Fore, Style, init
 from dotenv import load_dotenv
@@ -21,15 +22,13 @@ def main():
 
     # Define chat and embedding models for Groq
     chat_model = "groq"            # Use Groq for chat
-    chat_model_name = "llama-3.1-70b-versatile" # Groq's chat model
-    #chat_model_name = "llama3-groq-70b-8192-tool-use-preview" # Groq's chat model
-    #chat_model_name= "llama-3.2-3b-preview"
-    #chat_model_name = "llama-3.1-8b-instant" # Groq's chat model
-    #chat_model = "ollama"            # Use Groq for chat
-    #chat_model_name = "llama3.2:latest" # Groq's chat model
+    chat_model_name = "llama-3.1-70b-versatile" # Use largest parameter model
     
     # Add vision model configuration
     vision_model_name = "llama-3.2-90b-vision-preview"
+
+    # Add speech model configuration
+    speech_model_name = "whisper-large-v3"
     
     # Define embedding model for Groq
     embedding_model = "ollama"      # Choose 'openai' or 'ollama' for embeddings
@@ -37,27 +36,31 @@ def main():
 
     # Choose your storage option
     storage_option = JSONStorage.JSONStorage("interaction_history.json")
-    # Or use in-memory storage:
-    #from memoripy import InMemoryStorage
-    #storage_option = InMemoryStorage()
+    # Or use in memory storage by setting to None
     
     # Initialize the MemoryManager with the selected models and storage
     memory_manager = MemoryManager.MemoryManager(
         api_key=api_key,
         chat_model=chat_model,
         chat_model_name=chat_model_name,
+        vision_model_name=vision_model_name,
+        speech_model_name=speech_model_name,
         embedding_model=embedding_model,
         embedding_model_name=embedding_model_name,
         storage=storage_option,
-        in_memory=False,
-        vision_model_name=vision_model_name
     )
+
+    whispermodel = WhisperModel.WhisperTranscriber()
 
     print("Welcome to the conversation! (Type 'exit' to end)")
     
     while True:
         # Get user input
-        new_prompt = input(Fore.GREEN + "\nYou: " + Style.RESET_ALL).strip()
+
+        prompt, language = whispermodel.transcribe_audio("/Users/itsmarsss/Documents/see/New Recording 6.wav")
+
+        print(prompt, language)
+        new_prompt = prompt #input(Fore.GREEN + "\nYou: " + Style.RESET_ALL).strip()
         
         # Check for exit condition
         if new_prompt.lower() == 'exit':

@@ -1,7 +1,6 @@
 import numpy as np
 import json
 import time
-from datetime import datetime
 import uuid
 import ollama
 from groq import Groq
@@ -9,6 +8,9 @@ from langchain_groq import ChatGroq
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from PIL import Image
 import base64
+import faster_whisper
+
+from whisper.whispermodel import WhisperTranscriber
 
 from .memory_store import MemoryStore
 
@@ -32,11 +34,23 @@ class MemoryManager:
     adding interactions, retrieving relevant interactions, and generating responses.
     """
 
-    def __init__(self, api_key, chat_model="ollama", chat_model_name="llama3.1:8b", embedding_model="ollama", embedding_model_name="mxbai-embed-large", storage=None, in_memory=False, vision_model_name="llama-3.2-11b-vision-preview"):
+    def __init__(self, api_key, chat_model="ollama",
+                                chat_model_name="llama3.1:8b",
+                                vision_model_name="llama-3.2-11b-vision-preview",
+                                speech_model_name="whisper-large-v3",
+                                embedding_model="ollama",
+                                embedding_model_name="mxbai-embed-large",
+                                storage=None):
         self.api_key = api_key
+        self.chat_model = chat_model
         self.chat_model_name = chat_model_name
+        self.vision_model_name = vision_model_name
+        self.speech_model_name = speech_model_name
+        self.embedding_model = embedding_model 
         self.embedding_model_name = embedding_model_name
-        self.in_memory = in_memory
+        self.storage = storage
+
+        self.in_memory = storage is None
 
         # Set chat model
         if chat_model.lower() == "openai":
@@ -74,10 +88,10 @@ class MemoryManager:
         # Initialize memory store with the correct dimension
         self.memory_store = MemoryStore(dimension=self.dimension)
 
-        self.storage = storage
-
-        self.vision_model_name = vision_model_name
-        self.vision_llm = ChatGroq(model=vision_model_name, api_key=self.api_key) if chat_model.lower() == "groq" else None
+        if chat_model.lower() == "groq":
+            self.vision_llm = ChatGroq(model=vision_model_name, api_key=self.api_key)
+        else:
+            self.vision_llm = None
 
         self.groq_client = Groq(api_key=api_key)
 
@@ -145,7 +159,7 @@ class MemoryManager:
             self.storage.save_memory_to_history(self.memory_store)
 
     def add_interaction(self, prompt, output, embedding, concepts, is_core_memory=False):
-        timestamp = datetime.now().isoformat()
+        timestamp = time.time()
         interaction_id = str(uuid.uuid4())
         
         interaction = {
@@ -193,7 +207,7 @@ class MemoryManager:
         
         parsed.update({
             "embedding": embedding.tolist(),
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": time.time(),
             "concepts": concepts
         })
         
