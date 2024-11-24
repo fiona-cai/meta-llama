@@ -49,6 +49,7 @@ def main():
         embedding_model=embedding_model,
         embedding_model_name=embedding_model_name,
         storage=storage_option,
+        in_memory=False,
         vision_model_name=vision_model_name
     )
 

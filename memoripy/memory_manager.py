@@ -32,10 +32,11 @@ class MemoryManager:
     adding interactions, retrieving relevant interactions, and generating responses.
     """
 
-    def __init__(self, api_key, chat_model="ollama", chat_model_name="llama3.1:8b", embedding_model="ollama", embedding_model_name="mxbai-embed-large", storage=None, vision_model_name="llama-3.2-11b-vision-preview"):
+    def __init__(self, api_key, chat_model="ollama", chat_model_name="llama3.1:8b", embedding_model="ollama", embedding_model_name="mxbai-embed-large", storage=None, in_memory=False, vision_model_name="llama-3.2-11b-vision-preview"):
         self.api_key = api_key
         self.chat_model_name = chat_model_name
         self.embedding_model_name = embedding_model_name
+        self.in_memory = in_memory
 
         # Set chat model
         if chat_model.lower() == "openai":
@@ -73,10 +74,7 @@ class MemoryManager:
         # Initialize memory store with the correct dimension
         self.memory_store = MemoryStore(dimension=self.dimension)
 
-        if storage is None:
-            self.storage = InMemoryStorage()
-        else:
-            self.storage = storage
+        self.storage = storage
 
         self.vision_model_name = vision_model_name
         self.vision_llm = ChatGroq(model=vision_model_name, api_key=self.api_key) if chat_model.lower() == "groq" else None
@@ -143,7 +141,8 @@ class MemoryManager:
         return short_term, long_term, core
 
     def save_memory_to_history(self):
-        self.storage.save_memory_to_history(self.memory_store)
+        if not self.in_memory:
+            self.storage.save_memory_to_history(self.memory_store)
 
     def add_interaction(self, prompt, output, embedding, concepts, is_core_memory=False):
         timestamp = datetime.now().isoformat()
