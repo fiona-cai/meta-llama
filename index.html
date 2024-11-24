@@ -46,8 +46,9 @@
             position: relative;
         }
         canvas {
-            width: 80vw;
-            height: 40vh;
+            width: 100%;
+            height: auto;
+            aspect-ratio: 16/9;
             background-color: #000;
         }
         #response-container {
@@ -62,10 +63,6 @@
             overflow-y: auto;
             max-height: 100%;
             padding: 10px;
-        }
-        #response-container h3 {
-            margin: 0;
-            padding: 0px;
         }
         #response-container pre {
             white-space: pre-wrap;
