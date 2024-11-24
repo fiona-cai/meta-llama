@@ -27,9 +27,9 @@
             flex-shrink: 0;
         }
         button {
-            flex: 1 1 45%; /* Ensures buttons are responsive and take up 45% width on small screens */
-            padding: 15px; /* Increased padding for better touch targets */
-            font-size: 16px; /* Adjusted font size for readability on mobile */
+            flex: 1 1 45%;
+            padding: 15px;
+            font-size: 16px;
             cursor: pointer;
             border: none;
             background-color: #007bff;
@@ -47,7 +47,7 @@
             flex: 1;
             background-color: #000;
             position: relative;
-            height: calc(60vh - 50px); /* Adjusted for better fit on mobile, accounting for control height */
+            height: calc(60vh - 50px);
         }
         canvas {
             width: 100%;
@@ -56,7 +56,7 @@
         }
         #accessible-text {
             position: absolute;
-            clip: rect(0, 0, 0, 0); /* Hides the alt text for screen readers */
+            clip: rect(0, 0, 0, 0);
             width: 1px;
             height: 1px;
             overflow: hidden;
@@ -71,7 +71,7 @@
             font-size: 14px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
             overflow-y: auto;
-            max-height: 35vh; /* Adjusted for better fit on both mobile and desktop */
+            max-height: 35vh;
             padding: 10px;
         }
         #response-container pre {
@@ -121,31 +121,38 @@
             }
 
             try {
+                // Try to use the back camera
                 const stream = await navigator.mediaDevices.getUserMedia({
-                    video: {
-                        facingMode: "environment" // Use the back camera
-                    },
+                    video: { facingMode: { exact: "environment" } }
                 });
                 currentStream = stream;
-
-                const video = document.createElement("video");
-                video.srcObject = stream;
-                video.play();
-                video.onloadedmetadata = () => {
-                    canvas.width = video.videoWidth;
-                    canvas.height = video.videoHeight;
-
-                    function drawFrame() {
-                        if (currentStream) {
-                            context.drawImage(video, 0, 0, canvas.width, canvas.height);
-                            requestAnimationFrame(drawFrame);
-                        }
-                    }
-                    drawFrame();
-                };
+                startStream(stream);
             } catch (error) {
-                alert("Error accessing webcam: " + error.message);
+                // Fallback to the front camera or any camera
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: true
+                });
+                currentStream = stream;
+                startStream(stream);
             }
+        };
+
+        const startStream = (stream) => {
+            const video = document.createElement("video");
+            video.srcObject = stream;
+            video.play();
+            video.onloadedmetadata = () => {
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+
+                function drawFrame() {
+                    if (currentStream) {
+                        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                        requestAnimationFrame(drawFrame);
+                    }
+                }
+                drawFrame();
+            };
         };
 
         const startRecording = async () => {
