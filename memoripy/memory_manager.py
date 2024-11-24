@@ -469,7 +469,7 @@ class MemoryManager:
     def check_visual_request(self, prompt: str) -> VisionCheckResponse:
         """Check if the user request requires visual processing."""
         messages = [
-            SystemMessage(content="""You are a request analyzer that determines if a query requires visual processing.
+            SystemMessage(content="""You are a request analyzer that determines if the user is asking for visual guidance.
             Consider that requests may come from visually impaired users needing assistance with:
             
             Daily Tasks:
@@ -494,29 +494,43 @@ class MemoryManager:
             - Reading error messages on screens
             - Describing app interfaces
             - Checking display settings
-            
-            Follow these steps:
-            1. Analyze if the query involves any visual elements or descriptions
-            2. Check if the request requires observing or interpreting visual information
-            3. Return a JSON response with:
-               - is_visual: boolean indicating if visual processing is needed
-               - reasoning: string explaining the step-by-step analysis"""),
+            Output JSON using the following format
+{
+    "is_visual": true,  # Boolean indicating if request requires visual processing
+    "reasoning": "String explaining why this is considered visual assistance."
+}"""),
             HumanMessage(content=f"Analyze if this query requires visual processing: {prompt}")
         ]
         
         response = self.llm.invoke(messages)
-        parsed = self._extract_last_json(response.content)
-        if parsed and "is_visual" in parsed and "reasoning" in parsed:
+        try:
+            parsed = json.loads(response.content)
             return VisionCheckResponse(**parsed)
-            
-        # Fallback simple parsing if JSON extraction fails
-        is_visual = any(word in prompt.lower() for word in ['image', 'picture', 'photo', 'look at', 'see'])
-        return VisionCheckResponse(is_visual=is_visual, reasoning="Simple keyword detection")
+        except json.JSONDecodeError:
+            # Fallback simple parsing if JSON is malformed
+            is_visual = any(word in prompt.lower() for word in ['image', 'picture', 'photo', 'look at', 'see'])
+            return VisionCheckResponse(is_visual=is_visual, reasoning="Simple keyword detection")
 
     def process_visual_request(self, prompt: str, image_path: str) -> str:
         """Process a visual request using the Groq vision model."""
         try:
-            # Create the completion request with image
+            # Get core memory values
+            descriptive_prompt = f"""As {self.memory_store.core_memory.get('assistant_name', 'Assistant')}, with a {self.memory_store.core_memory.get('persona', 'helpful')} persona, I am assisting {self.memory_store.core_memory.get('user_name', 'User')}.
+            
+            Please provide a detailed and clear description of the image using descriptive language that matches my persona. 
+            Focus on these aspects in your analysis:
+            1. Main subjects and their spatial relationships
+            2. Colors, textures, and lighting
+            3. Important details that might not be immediately obvious
+            4. Text or symbols if present
+            5. Context and setting
+            6. Any potential safety concerns or important warnings
+            
+            Format your description in a way that would be helpful for someone who cannot see the image.
+            Maintain a {self.memory_store.core_memory.get('persona', 'helpful')} tone throughout the description.
+            
+            {self.memory_store.core_memory.get('user_name', 'User')}'s specific request: {prompt}"""
+
             completion = self.groq_client.chat.completions.create(
                 model=self.vision_model_name,
                 messages=[
@@ -525,7 +539,7 @@ class MemoryManager:
                         "content": [
                             {
                                 "type": "text", 
-                                "text": prompt
+                                "text": descriptive_prompt
                             },
                             {
                                 "type": "image_url",

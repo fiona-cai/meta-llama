@@ -1,268 +1,798 @@
 <html>
     <head>
         <style>
-        html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
-        body { 
-            background: #222222;
-        }
-        #mynetwork { 
-            width: 100vw !important; 
-            height: 100vh !important; 
-            background: #222222 !important;
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-        }
-        .vis-configuration-wrapper {
-            position: fixed !important;
-            top: 0 !important;
-            right: -530px !important;  /* Start offscreen */
-            height: 100vh !important;
-            background: rgba(34, 34, 34, 0.6) !important;  /* More transparent */
-            backdrop-filter: blur(8px) !important;
-            -webkit-backdrop-filter: blur(8px) !important;  /* For Safari */
-            padding: 20px !important;
-            z-index: 1000 !important;
-            color: white !important;
-            width: 530 !important;
-            transition: right 0.5s ease-out !important;
-        }
-        #menu-toggle {
-            position: absolute !important;
-            top: 50% !important;
-            left: 0 !important;
-            transform: translate(-100%, -50%) !important;
-            background: rgba(34, 34, 34, 0.95) !important;
-            color: white !important;
-            border: none !important;
-            padding: 8px 3px !important;
-            cursor: pointer !important;
-            z-index: 1001 !important;
-            border-radius: 4px 0 0 4px !important;
-            font-size: 10px !important;
-        }
-        .menu-visible .vis-configuration-wrapper {
-            right: 0 !important;
-        }
-        #menu-toggle::after {
-            content: '◀' !important;
-            display: block !important;
-            transform: scaleY(2) !important;
-        }
-        .menu-visible #menu-toggle::after {
-            content: '▶' !important;
-        }
-        .vis-configuration {
-            background: transparent !important;
-            color: white !important;
-        }
-        .vis-config-item {
-            color: white !important;
-        }
-        .vis-configuration input {
-            background: rgba(51, 51, 51, 0.8) !important;
-            color: white !important;
-            border: 1px solid rgba(68, 68, 68, 0.8) !important;
-        }
-        .vis-configuration select {
-            background: rgba(51, 51, 51, 0.8) !important;
-            color: white !important;
-        }
+            html,
+            body {
+                margin: 0;
+                padding: 0;
+                height: 100%;
+                overflow: hidden;
+            }
+            body {
+                background: #222222;
+            }
+            #mynetwork {
+                width: 100vw !important;
+                height: 100vh !important;
+                background: #222222 !important;
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+            }
+            .vis-configuration-wrapper {
+                position: fixed !important;
+                top: 0 !important;
+                right: -530px !important; /* Start offscreen */
+                height: 100vh !important;
+                background: rgba(
+                    34,
+                    34,
+                    34,
+                    0.6
+                ) !important; /* More transparent */
+                backdrop-filter: blur(8px) !important;
+                -webkit-backdrop-filter: blur(8px) !important; /* For Safari */
+                padding: 20px !important;
+                z-index: 1000 !important;
+                color: white !important;
+                width: 530 !important;
+                transition: right 0.5s ease-out !important;
+            }
+            #menu-toggle {
+                position: absolute !important;
+                top: 50% !important;
+                left: 0 !important;
+                transform: translate(-100%, -50%) !important;
+                background: rgba(34, 34, 34, 0.95) !important;
+                color: white !important;
+                border: none !important;
+                padding: 8px 3px !important;
+                cursor: pointer !important;
+                z-index: 1001 !important;
+                border-radius: 4px 0 0 4px !important;
+                font-size: 10px !important;
+            }
+            .menu-visible .vis-configuration-wrapper {
+                right: 0 !important;
+            }
+            #menu-toggle::after {
+                content: "◀" !important;
+                display: block !important;
+                transform: scaleY(2) !important;
+            }
+            .menu-visible #menu-toggle::after {
+                content: "▶" !important;
+            }
+            .vis-configuration {
+                background: transparent !important;
+                color: white !important;
+            }
+            .vis-config-item {
+                color: white !important;
+            }
+            .vis-configuration input {
+                background: rgba(51, 51, 51, 0.8) !important;
+                color: white !important;
+                border: 1px solid rgba(68, 68, 68, 0.8) !important;
+            }
+            .vis-configuration select {
+                background: rgba(51, 51, 51, 0.8) !important;
+                color: white !important;
+            }
         </style>
         <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const wrapper = document.querySelector('.vis-configuration-wrapper');
-            const toggle = document.createElement('button');
-            toggle.id = 'menu-toggle';
-            wrapper.appendChild(toggle);
-            
-            toggle.addEventListener('click', function() {
-                document.body.classList.toggle('menu-visible');
-            });
-        });
-        </script>
-        <meta charset="utf-8">
-        
-            <script src="lib/bindings/utils.js"></script>
-            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/dist/vis-network.min.css" integrity="sha512-WgxfT5LWjfszlPHXRmBWHkV2eceiWTOBvrKCNbdgDYTHrT2AeLCGbF4sZlZw3UMN3WtL0tGUoIAKsu8mllg/XA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-            <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js" integrity="sha512-LnvoEWDFrqGHlHmDD2101OrLcbsfkrzoSpvtSQtxK3RMnRV0eOkhhBN2dXHKRrUU8p2DGRTk35n4O8nWSVe1mQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-            
-        
-<center>
-<h1></h1>
-</center>
+            document.addEventListener("DOMContentLoaded", function () {
+                const wrapper = document.querySelector(
+                    ".vis-configuration-wrapper"
+                );
+                const toggle = document.createElement("button");
+                toggle.id = "menu-toggle";
+                wrapper.appendChild(toggle);
 
-<!-- <link rel="stylesheet" href="../node_modules/vis/dist/vis.min.css" type="text/css" />
-<script type="text/javascript" src="../node_modules/vis/dist/vis.js"> </script>-->
+                toggle.addEventListener("click", function () {
+                    document.body.classList.toggle("menu-visible");
+                });
+            });
+        </script>
+        <meta charset="utf-8" />
+
+        <script src="lib/bindings/utils.js"></script>
         <link
-          href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css"
-          rel="stylesheet"
-          integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6"
-          crossorigin="anonymous"
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/dist/vis-network.min.css"
+            integrity="sha512-WgxfT5LWjfszlPHXRmBWHkV2eceiWTOBvrKCNbdgDYTHrT2AeLCGbF4sZlZw3UMN3WtL0tGUoIAKsu8mllg/XA=="
+            crossorigin="anonymous"
+            referrerpolicy="no-referrer"
         />
         <script
-          src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
-          integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
-          crossorigin="anonymous"
+            src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js"
+            integrity="sha512-LnvoEWDFrqGHlHmDD2101OrLcbsfkrzoSpvtSQtxK3RMnRV0eOkhhBN2dXHKRrUU8p2DGRTk35n4O8nWSVe1mQ=="
+            crossorigin="anonymous"
+            referrerpolicy="no-referrer"
         ></script>
 
+        <center>
+            <h1></h1>
+        </center>
+
+        <!-- <link rel="stylesheet" href="../node_modules/vis/dist/vis.min.css" type="text/css" />
+<script type="text/javascript" src="../node_modules/vis/dist/vis.js"> </script>-->
+        <link
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css"
+            rel="stylesheet"
+            integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6"
+            crossorigin="anonymous"
+        />
+        <script
+            src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
+            crossorigin="anonymous"
+        ></script>
 
         <center>
-          <h1></h1>
+            <h1></h1>
         </center>
         <style type="text/css">
+            #mynetwork {
+                width: 100%;
+                height: 100vh;
+                background-color: #222222;
+                border: 1px solid lightgray;
+                position: relative;
+                float: left;
+            }
 
-             #mynetwork {
-                 width: 100%;
-                 height: 100vh;
-                 background-color: #222222;
-                 border: 1px solid lightgray;
-                 position: relative;
-                 float: left;
-             }
-
-             
-
-             
-             #config {
-                 float: left;
-                 width: 400px;
-                 height: 600px;
-             }
-             
-
-             
+            #config {
+                float: left;
+                width: 400px;
+                height: 600px;
+            }
         </style>
     </head>
 
-
     <body>
         <div class="card" style="width: 100%">
-            
-            
             <div id="mynetwork" class="card-body"></div>
         </div>
 
-        
-        
-            <div id="config"></div>
-        
+        <div id="config"></div>
 
         <script type="text/javascript">
+            // initialize global variables.
+            var edges;
+            var nodes;
+            var allNodes;
+            var allEdges;
+            var nodeColors;
+            var originalNodes;
+            var network;
+            var container;
+            var options, data;
+            var filter = {
+                item: "",
+                property: "",
+                value: [],
+            };
 
-              // initialize global variables.
-              var edges;
-              var nodes;
-              var allNodes;
-              var allEdges;
-              var nodeColors;
-              var originalNodes;
-              var network;
-              var container;
-              var options, data;
-              var filter = {
-                  item : '',
-                  property : '',
-                  value : []
-              };
+            // This method is responsible for drawing the graph, returns the drawn network
+            function drawGraph() {
+                var container = document.getElementById("mynetwork");
 
-              
+                // parsing and collecting nodes and edges from the python
+                nodes = new vis.DataSet([
+                    {
+                        color: { background: "#2b5876", border: "#4e4376" },
+                        font: { color: "white" },
+                        id: "Online search",
+                        label: "Online search",
+                        shape: "dot",
+                        size: 50.0,
+                        title: "Frequency: 1",
+                    },
+                    {
+                        color: { background: "#2b5876", border: "#4e4376" },
+                        font: { color: "white" },
+                        id: "Grocery store",
+                        label: "Grocery store",
+                        shape: "dot",
+                        size: 50.0,
+                        title: "Frequency: 1",
+                    },
+                    {
+                        color: { background: "#2b5876", border: "#4e4376" },
+                        font: { color: "white" },
+                        id: "Checking spice section",
+                        label: "Checking spice section",
+                        shape: "dot",
+                        size: 50.0,
+                        title: "Frequency: 1",
+                    },
+                    {
+                        color: { background: "#2b5876", border: "#4e4376" },
+                        font: { color: "white" },
+                        id: "Availability of curry powder",
+                        label: "Availability of curry powder",
+                        shape: "dot",
+                        size: 50.0,
+                        title: "Frequency: 1",
+                    },
+                    {
+                        color: { background: "#2b5876", border: "#4e4376" },
+                        font: { color: "white" },
+                        id: "Store staff confirmation",
+                        label: "Store staff confirmation",
+                        shape: "dot",
+                        size: 50.0,
+                        title: "Frequency: 1",
+                    },
+                    {
+                        color: { background: "#2b5876", border: "#4e4376" },
+                        font: { color: "white" },
+                        id: "International food aisle",
+                        label: "International food aisle",
+                        shape: "dot",
+                        size: 50.0,
+                        title: "Frequency: 1",
+                    },
+                    {
+                        color: { background: "#2b5876", border: "#4e4376" },
+                        font: { color: "white" },
+                        id: "Pantry or cupboard contents",
+                        label: "Pantry or cupboard contents",
+                        shape: "dot",
+                        size: 50.0,
+                        title: "Frequency: 1",
+                    },
+                    {
+                        color: { background: "#2b5876", border: "#4e4376" },
+                        font: { color: "white" },
+                        id: "Shelf characteristics",
+                        label: "Shelf characteristics",
+                        shape: "dot",
+                        size: 50.0,
+                        title: "Frequency: 1",
+                    },
+                    {
+                        color: { background: "#2b5876", border: "#4e4376" },
+                        font: { color: "white" },
+                        id: "Image description",
+                        label: "Image description",
+                        shape: "dot",
+                        size: 50.0,
+                        title: "Frequency: 1",
+                    },
+                    {
+                        color: { background: "#2b5876", border: "#4e4376" },
+                        font: { color: "white" },
+                        id: "Kitchen atmosphere",
+                        label: "Kitchen atmosphere",
+                        shape: "dot",
+                        size: 50.0,
+                        title: "Frequency: 1",
+                    },
+                    {
+                        color: { background: "#2b5876", border: "#4e4376" },
+                        font: { color: "white" },
+                        id: "Kitchen supplies and items",
+                        label: "Kitchen supplies and items",
+                        shape: "dot",
+                        size: 50.0,
+                        title: "Frequency: 1",
+                    },
+                    {
+                        color: { background: "#2b5876", border: "#4e4376" },
+                        font: { color: "white" },
+                        id: "Memory visualization",
+                        label: "Memory visualization",
+                        shape: "dot",
+                        size: 50.0,
+                        title: "Frequency: 1",
+                    },
+                    {
+                        color: { background: "#2b5876", border: "#4e4376" },
+                        font: { color: "white" },
+                        id: "Python script",
+                        label: "Python script",
+                        shape: "dot",
+                        size: 50.0,
+                        title: "Frequency: 1",
+                    },
+                    {
+                        color: { background: "#2b5876", border: "#4e4376" },
+                        font: { color: "white" },
+                        id: "MediaPipe library",
+                        label: "MediaPipe library",
+                        shape: "dot",
+                        size: 50.0,
+                        title: "Frequency: 1",
+                    },
+                    {
+                        color: { background: "#2b5876", border: "#4e4376" },
+                        font: { color: "white" },
+                        id: "GUI element",
+                        label: "GUI element",
+                        shape: "dot",
+                        size: 50.0,
+                        title: "Frequency: 1",
+                    },
+                    {
+                        color: { background: "#2b5876", border: "#4e4376" },
+                        font: { color: "white" },
+                        id: "OpenCV library",
+                        label: "OpenCV library",
+                        shape: "dot",
+                        size: 50.0,
+                        title: "Frequency: 1",
+                    },
+                    {
+                        color: { background: "#2b5876", border: "#4e4376" },
+                        font: { color: "white" },
+                        id: "Pre-trained model",
+                        label: "Pre-trained model",
+                        shape: "dot",
+                        size: 50.0,
+                        title: "Frequency: 1",
+                    },
+                    {
+                        color: { background: "#2b5876", border: "#4e4376" },
+                        font: { color: "white" },
+                        id: "Bounding boxes",
+                        label: "Bounding boxes",
+                        shape: "dot",
+                        size: 50.0,
+                        title: "Frequency: 1",
+                    },
+                    {
+                        color: { background: "#2b5876", border: "#4e4376" },
+                        font: { color: "white" },
+                        id: "Object detection",
+                        label: "Object detection",
+                        shape: "dot",
+                        size: 50.0,
+                        title: "Frequency: 1",
+                    },
+                ]);
+                edges = new vis.DataSet([
+                    {
+                        color: { color: "#6e8898" },
+                        from: "Online search",
+                        title: "Co-occurrences: 1",
+                        to: "Grocery store",
+                        width: 6.0,
+                    },
+                    {
+                        color: { color: "#6e8898" },
+                        from: "Online search",
+                        title: "Co-occurrences: 1",
+                        to: "Checking spice section",
+                        width: 6.0,
+                    },
+                    {
+                        color: { color: "#6e8898" },
+                        from: "Online search",
+                        title: "Co-occurrences: 1",
+                        to: "Availability of curry powder",
+                        width: 6.0,
+                    },
+                    {
+                        color: { color: "#6e8898" },
+                        from: "Online search",
+                        title: "Co-occurrences: 1",
+                        to: "Store staff confirmation",
+                        width: 6.0,
+                    },
+                    {
+                        color: { color: "#6e8898" },
+                        from: "Online search",
+                        title: "Co-occurrences: 1",
+                        to: "International food aisle",
+                        width: 6.0,
+                    },
+                    {
+                        color: { color: "#6e8898" },
+                        from: "Grocery store",
+                        title: "Co-occurrences: 1",
+                        to: "Checking spice section",
+                        width: 6.0,
+                    },
+                    {
+                        color: { color: "#6e8898" },
+                        from: "Grocery store",
+                        title: "Co-occurrences: 1",
+                        to: "Availability of curry powder",
+                        width: 6.0,
+                    },
+                    {
+                        color: { color: "#6e8898" },
+                        from: "Grocery store",
+                        title: "Co-occurrences: 1",
+                        to: "Store staff confirmation",
+                        width: 6.0,
+                    },
+                    {
+                        color: { color: "#6e8898" },
+                        from: "Grocery store",
+                        title: "Co-occurrences: 1",
+                        to: "International food aisle",
+                        width: 6.0,
+                    },
+                    {
+                        color: { color: "#6e8898" },
+                        from: "Checking spice section",
+                        title: "Co-occurrences: 1",
+                        to: "Availability of curry powder",
+                        width: 6.0,
+                    },
+                    {
+                        color: { color: "#6e8898" },
+                        from: "Checking spice section",
+                        title: "Co-occurrences: 1",
+                        to: "Store staff confirmation",
+                        width: 6.0,
+                    },
+                    {
+                        color: { color: "#6e8898" },
+                        from: "Checking spice section",
+                        title: "Co-occurrences: 1",
+                        to: "International food aisle",
+                        width: 6.0,
+                    },
+                    {
+                        color: { color: "#6e8898" },
+                        from: "Availability of curry powder",
+                        title: "Co-occurrences: 1",
+                        to: "Store staff confirmation",
+                        width: 6.0,
+                    },
+                    {
+                        color: { color: "#6e8898" },
+                        from: "Availability of curry powder",
+                        title: "Co-occurrences: 1",
+                        to: "International food aisle",
+                        width: 6.0,
+                    },
+                    {
+                        color: { color: "#6e8898" },
+                        from: "Store staff confirmation",
+                        title: "Co-occurrences: 1",
+                        to: "International food aisle",
+                        width: 6.0,
+                    },
+                    {
+                        color: { color: "#6e8898" },
+                        from: "Pantry or cupboard contents",
+                        title: "Co-occurrences: 1",
+                        to: "Shelf characteristics",
+                        width: 6.0,
+                    },
+                    {
+                        color: { color: "#6e8898" },
+                        from: "Pantry or cupboard contents",
+                        title: "Co-occurrences: 1",
+                        to: "Image description",
+                        width: 6.0,
+                    },
+                    {
+                        color: { color: "#6e8898" },
+                        from: "Pantry or cupboard contents",
+                        title: "Co-occurrences: 1",
+                        to: "Kitchen atmosphere",
+                        width: 6.0,
+                    },
+                    {
+                        color: { color: "#6e8898" },
+                        from: "Pantry or cupboard contents",
+                        title: "Co-occurrences: 1",
+                        to: "Kitchen supplies and items",
+                        width: 6.0,
+                    },
+                    {
+                        color: { color: "#6e8898" },
+                        from: "Shelf characteristics",
+                        title: "Co-occurrences: 1",
+                        to: "Image description",
+                        width: 6.0,
+                    },
+                    {
+                        color: { color: "#6e8898" },
+                        from: "Shelf characteristics",
+                        title: "Co-occurrences: 1",
+                        to: "Kitchen atmosphere",
+                        width: 6.0,
+                    },
+                    {
+                        color: { color: "#6e8898" },
+                        from: "Shelf characteristics",
+                        title: "Co-occurrences: 1",
+                        to: "Kitchen supplies and items",
+                        width: 6.0,
+                    },
+                    {
+                        color: { color: "#6e8898" },
+                        from: "Image description",
+                        title: "Co-occurrences: 1",
+                        to: "Kitchen atmosphere",
+                        width: 6.0,
+                    },
+                    {
+                        color: { color: "#6e8898" },
+                        from: "Image description",
+                        title: "Co-occurrences: 1",
+                        to: "Kitchen supplies and items",
+                        width: 6.0,
+                    },
+                    {
+                        color: { color: "#6e8898" },
+                        from: "Kitchen atmosphere",
+                        title: "Co-occurrences: 1",
+                        to: "Kitchen supplies and items",
+                        width: 6.0,
+                    },
+                    {
+                        color: { color: "#6e8898" },
+                        from: "Memory visualization",
+                        title: "Co-occurrences: 1",
+                        to: "Python script",
+                        width: 6.0,
+                    },
+                    {
+                        color: { color: "#6e8898" },
+                        from: "Memory visualization",
+                        title: "Co-occurrences: 1",
+                        to: "MediaPipe library",
+                        width: 6.0,
+                    },
+                    {
+                        color: { color: "#6e8898" },
+                        from: "Memory visualization",
+                        title: "Co-occurrences: 1",
+                        to: "GUI element",
+                        width: 6.0,
+                    },
+                    {
+                        color: { color: "#6e8898" },
+                        from: "Memory visualization",
+                        title: "Co-occurrences: 1",
+                        to: "OpenCV library",
+                        width: 6.0,
+                    },
+                    {
+                        color: { color: "#6e8898" },
+                        from: "Memory visualization",
+                        title: "Co-occurrences: 1",
+                        to: "Pre-trained model",
+                        width: 6.0,
+                    },
+                    {
+                        color: { color: "#6e8898" },
+                        from: "Memory visualization",
+                        title: "Co-occurrences: 1",
+                        to: "Bounding boxes",
+                        width: 6.0,
+                    },
+                    {
+                        color: { color: "#6e8898" },
+                        from: "Memory visualization",
+                        title: "Co-occurrences: 1",
+                        to: "Object detection",
+                        width: 6.0,
+                    },
+                    {
+                        color: { color: "#6e8898" },
+                        from: "Python script",
+                        title: "Co-occurrences: 1",
+                        to: "MediaPipe library",
+                        width: 6.0,
+                    },
+                    {
+                        color: { color: "#6e8898" },
+                        from: "Python script",
+                        title: "Co-occurrences: 1",
+                        to: "GUI element",
+                        width: 6.0,
+                    },
+                    {
+                        color: { color: "#6e8898" },
+                        from: "Python script",
+                        title: "Co-occurrences: 1",
+                        to: "OpenCV library",
+                        width: 6.0,
+                    },
+                    {
+                        color: { color: "#6e8898" },
+                        from: "Python script",
+                        title: "Co-occurrences: 1",
+                        to: "Pre-trained model",
+                        width: 6.0,
+                    },
+                    {
+                        color: { color: "#6e8898" },
+                        from: "Python script",
+                        title: "Co-occurrences: 1",
+                        to: "Bounding boxes",
+                        width: 6.0,
+                    },
+                    {
+                        color: { color: "#6e8898" },
+                        from: "Python script",
+                        title: "Co-occurrences: 1",
+                        to: "Object detection",
+                        width: 6.0,
+                    },
+                    {
+                        color: { color: "#6e8898" },
+                        from: "MediaPipe library",
+                        title: "Co-occurrences: 1",
+                        to: "GUI element",
+                        width: 6.0,
+                    },
+                    {
+                        color: { color: "#6e8898" },
+                        from: "MediaPipe library",
+                        title: "Co-occurrences: 1",
+                        to: "OpenCV library",
+                        width: 6.0,
+                    },
+                    {
+                        color: { color: "#6e8898" },
+                        from: "MediaPipe library",
+                        title: "Co-occurrences: 1",
+                        to: "Pre-trained model",
+                        width: 6.0,
+                    },
+                    {
+                        color: { color: "#6e8898" },
+                        from: "MediaPipe library",
+                        title: "Co-occurrences: 1",
+                        to: "Bounding boxes",
+                        width: 6.0,
+                    },
+                    {
+                        color: { color: "#6e8898" },
+                        from: "MediaPipe library",
+                        title: "Co-occurrences: 1",
+                        to: "Object detection",
+                        width: 6.0,
+                    },
+                    {
+                        color: { color: "#6e8898" },
+                        from: "GUI element",
+                        title: "Co-occurrences: 1",
+                        to: "OpenCV library",
+                        width: 6.0,
+                    },
+                    {
+                        color: { color: "#6e8898" },
+                        from: "GUI element",
+                        title: "Co-occurrences: 1",
+                        to: "Pre-trained model",
+                        width: 6.0,
+                    },
+                    {
+                        color: { color: "#6e8898" },
+                        from: "GUI element",
+                        title: "Co-occurrences: 1",
+                        to: "Bounding boxes",
+                        width: 6.0,
+                    },
+                    {
+                        color: { color: "#6e8898" },
+                        from: "GUI element",
+                        title: "Co-occurrences: 1",
+                        to: "Object detection",
+                        width: 6.0,
+                    },
+                    {
+                        color: { color: "#6e8898" },
+                        from: "OpenCV library",
+                        title: "Co-occurrences: 1",
+                        to: "Pre-trained model",
+                        width: 6.0,
+                    },
+                    {
+                        color: { color: "#6e8898" },
+                        from: "OpenCV library",
+                        title: "Co-occurrences: 1",
+                        to: "Bounding boxes",
+                        width: 6.0,
+                    },
+                    {
+                        color: { color: "#6e8898" },
+                        from: "OpenCV library",
+                        title: "Co-occurrences: 1",
+                        to: "Object detection",
+                        width: 6.0,
+                    },
+                    {
+                        color: { color: "#6e8898" },
+                        from: "Pre-trained model",
+                        title: "Co-occurrences: 1",
+                        to: "Bounding boxes",
+                        width: 6.0,
+                    },
+                    {
+                        color: { color: "#6e8898" },
+                        from: "Pre-trained model",
+                        title: "Co-occurrences: 1",
+                        to: "Object detection",
+                        width: 6.0,
+                    },
+                    {
+                        color: { color: "#6e8898" },
+                        from: "Bounding boxes",
+                        title: "Co-occurrences: 1",
+                        to: "Object detection",
+                        width: 6.0,
+                    },
+                ]);
 
-              
-
-              // This method is responsible for drawing the graph, returns the drawn network
-              function drawGraph() {
-                  var container = document.getElementById('mynetwork');
-
-                  
-
-                  // parsing and collecting nodes and edges from the python
-                  nodes = new vis.DataSet([{"color": {"background": "#2b5876", "border": "#4e4376"}, "font": {"color": "white"}, "id": "Greeting", "label": "Greeting", "shape": "dot", "size": 50.0, "title": "Frequency: 1"}, {"color": {"background": "#2b5876", "border": "#4e4376"}, "font": {"color": "white"}, "id": "Assistance request", "label": "Assistance request", "shape": "dot", "size": 50.0, "title": "Frequency: 1"}, {"color": {"background": "#2b5876", "border": "#4e4376"}, "font": {"color": "white"}, "id": "question about help", "label": "question about help", "shape": "dot", "size": 50.0, "title": "Frequency: 1"}, {"color": {"background": "#2b5876", "border": "#4e4376"}, "font": {"color": "white"}, "id": "location-based suggestions", "label": "location-based suggestions", "shape": "dot", "size": 50.0, "title": "Frequency: 1"}, {"color": {"background": "#2b5876", "border": "#4e4376"}, "font": {"color": "white"}, "id": "weather information", "label": "weather information", "shape": "dot", "size": 50.0, "title": "Frequency: 1"}, {"color": {"background": "#2b5876", "border": "#4e4376"}, "font": {"color": "white"}, "id": "AI limitations", "label": "AI limitations", "shape": "dot", "size": 50.0, "title": "Frequency: 1"}, {"color": {"background": "#2b5876", "border": "#4e4376"}, "font": {"color": "white"}, "id": "local news", "label": "local news", "shape": "dot", "size": 50.0, "title": "Frequency: 1"}, {"color": {"background": "#2b5876", "border": "#4e4376"}, "font": {"color": "white"}, "id": "virtual assistants", "label": "virtual assistants", "shape": "dot", "size": 50.0, "title": "Frequency: 1"}, {"color": {"background": "#2b5876", "border": "#4e4376"}, "font": {"color": "white"}, "id": "online resources", "label": "online resources", "shape": "dot", "size": 50.0, "title": "Frequency: 1"}, {"color": {"background": "#2b5876", "border": "#4e4376"}, "font": {"color": "white"}, "id": "Chairs", "label": "Chairs", "shape": "dot", "size": 50.0, "title": "Frequency: 1"}, {"color": {"background": "#2b5876", "border": "#4e4376"}, "font": {"color": "white"}, "id": "Meeting", "label": "Meeting", "shape": "dot", "size": 50.0, "title": "Frequency: 1"}, {"color": {"background": "#2b5876", "border": "#4e4376"}, "font": {"color": "white"}, "id": "Table", "label": "Table", "shape": "dot", "size": 50.0, "title": "Frequency: 1"}, {"color": {"background": "#2b5876", "border": "#4e4376"}, "font": {"color": "white"}, "id": "Conference", "label": "Conference", "shape": "dot", "size": 50.0, "title": "Frequency: 1"}, {"color": {"background": "#2b5876", "border": "#4e4376"}, "font": {"color": "white"}, "id": "Room", "label": "Room", "shape": "dot", "size": 50.0, "title": "Frequency: 1"}, {"color": {"background": "#2b5876", "border": "#4e4376"}, "font": {"color": "white"}, "id": "Decorations", "label": "Decorations", "shape": "dot", "size": 50.0, "title": "Frequency: 1"}, {"color": {"background": "#2b5876", "border": "#4e4376"}, "font": {"color": "white"}, "id": "Atmosphere", "label": "Atmosphere", "shape": "dot", "size": 50.0, "title": "Frequency: 1"}, {"color": {"background": "#2b5876", "border": "#4e4376"}, "font": {"color": "white"}, "id": "Objects", "label": "Objects", "shape": "dot", "size": 50.0, "title": "Frequency: 1"}]);
-                  edges = new vis.DataSet([{"color": {"color": "#6e8898"}, "from": "Greeting", "title": "Co-occurrences: 1", "to": "Assistance request", "width": 6.0}, {"color": {"color": "#6e8898"}, "from": "location-based suggestions", "title": "Co-occurrences: 1", "to": "weather information", "width": 6.0}, {"color": {"color": "#6e8898"}, "from": "location-based suggestions", "title": "Co-occurrences: 1", "to": "AI limitations", "width": 6.0}, {"color": {"color": "#6e8898"}, "from": "location-based suggestions", "title": "Co-occurrences: 1", "to": "local news", "width": 6.0}, {"color": {"color": "#6e8898"}, "from": "location-based suggestions", "title": "Co-occurrences: 1", "to": "virtual assistants", "width": 6.0}, {"color": {"color": "#6e8898"}, "from": "location-based suggestions", "title": "Co-occurrences: 1", "to": "online resources", "width": 6.0}, {"color": {"color": "#6e8898"}, "from": "weather information", "title": "Co-occurrences: 1", "to": "AI limitations", "width": 6.0}, {"color": {"color": "#6e8898"}, "from": "weather information", "title": "Co-occurrences: 1", "to": "local news", "width": 6.0}, {"color": {"color": "#6e8898"}, "from": "weather information", "title": "Co-occurrences: 1", "to": "virtual assistants", "width": 6.0}, {"color": {"color": "#6e8898"}, "from": "weather information", "title": "Co-occurrences: 1", "to": "online resources", "width": 6.0}, {"color": {"color": "#6e8898"}, "from": "AI limitations", "title": "Co-occurrences: 1", "to": "local news", "width": 6.0}, {"color": {"color": "#6e8898"}, "from": "AI limitations", "title": "Co-occurrences: 1", "to": "virtual assistants", "width": 6.0}, {"color": {"color": "#6e8898"}, "from": "AI limitations", "title": "Co-occurrences: 1", "to": "online resources", "width": 6.0}, {"color": {"color": "#6e8898"}, "from": "local news", "title": "Co-occurrences: 1", "to": "virtual assistants", "width": 6.0}, {"color": {"color": "#6e8898"}, "from": "local news", "title": "Co-occurrences: 1", "to": "online resources", "width": 6.0}, {"color": {"color": "#6e8898"}, "from": "virtual assistants", "title": "Co-occurrences: 1", "to": "online resources", "width": 6.0}, {"color": {"color": "#6e8898"}, "from": "Chairs", "title": "Co-occurrences: 1", "to": "Meeting", "width": 6.0}, {"color": {"color": "#6e8898"}, "from": "Chairs", "title": "Co-occurrences: 1", "to": "Table", "width": 6.0}, {"color": {"color": "#6e8898"}, "from": "Chairs", "title": "Co-occurrences: 1", "to": "Conference", "width": 6.0}, {"color": {"color": "#6e8898"}, "from": "Chairs", "title": "Co-occurrences: 1", "to": "Room", "width": 6.0}, {"color": {"color": "#6e8898"}, "from": "Chairs", "title": "Co-occurrences: 1", "to": "Decorations", "width": 6.0}, {"color": {"color": "#6e8898"}, "from": "Chairs", "title": "Co-occurrences: 1", "to": "Atmosphere", "width": 6.0}, {"color": {"color": "#6e8898"}, "from": "Chairs", "title": "Co-occurrences: 1", "to": "Objects", "width": 6.0}, {"color": {"color": "#6e8898"}, "from": "Meeting", "title": "Co-occurrences: 1", "to": "Table", "width": 6.0}, {"color": {"color": "#6e8898"}, "from": "Meeting", "title": "Co-occurrences: 1", "to": "Conference", "width": 6.0}, {"color": {"color": "#6e8898"}, "from": "Meeting", "title": "Co-occurrences: 1", "to": "Room", "width": 6.0}, {"color": {"color": "#6e8898"}, "from": "Meeting", "title": "Co-occurrences: 1", "to": "Decorations", "width": 6.0}, {"color": {"color": "#6e8898"}, "from": "Meeting", "title": "Co-occurrences: 1", "to": "Atmosphere", "width": 6.0}, {"color": {"color": "#6e8898"}, "from": "Meeting", "title": "Co-occurrences: 1", "to": "Objects", "width": 6.0}, {"color": {"color": "#6e8898"}, "from": "Table", "title": "Co-occurrences: 1", "to": "Conference", "width": 6.0}, {"color": {"color": "#6e8898"}, "from": "Table", "title": "Co-occurrences: 1", "to": "Room", "width": 6.0}, {"color": {"color": "#6e8898"}, "from": "Table", "title": "Co-occurrences: 1", "to": "Decorations", "width": 6.0}, {"color": {"color": "#6e8898"}, "from": "Table", "title": "Co-occurrences: 1", "to": "Atmosphere", "width": 6.0}, {"color": {"color": "#6e8898"}, "from": "Table", "title": "Co-occurrences: 1", "to": "Objects", "width": 6.0}, {"color": {"color": "#6e8898"}, "from": "Conference", "title": "Co-occurrences: 1", "to": "Room", "width": 6.0}, {"color": {"color": "#6e8898"}, "from": "Conference", "title": "Co-occurrences: 1", "to": "Decorations", "width": 6.0}, {"color": {"color": "#6e8898"}, "from": "Conference", "title": "Co-occurrences: 1", "to": "Atmosphere", "width": 6.0}, {"color": {"color": "#6e8898"}, "from": "Conference", "title": "Co-occurrences: 1", "to": "Objects", "width": 6.0}, {"color": {"color": "#6e8898"}, "from": "Room", "title": "Co-occurrences: 1", "to": "Decorations", "width": 6.0}, {"color": {"color": "#6e8898"}, "from": "Room", "title": "Co-occurrences: 1", "to": "Atmosphere", "width": 6.0}, {"color": {"color": "#6e8898"}, "from": "Room", "title": "Co-occurrences: 1", "to": "Objects", "width": 6.0}, {"color": {"color": "#6e8898"}, "from": "Decorations", "title": "Co-occurrences: 1", "to": "Atmosphere", "width": 6.0}, {"color": {"color": "#6e8898"}, "from": "Decorations", "title": "Co-occurrences: 1", "to": "Objects", "width": 6.0}, {"color": {"color": "#6e8898"}, "from": "Atmosphere", "title": "Co-occurrences: 1", "to": "Objects", "width": 6.0}]);
-
-                  nodeColors = {};
-                  allNodes = nodes.get({ returnType: "Object" });
-                  for (nodeId in allNodes) {
+                nodeColors = {};
+                allNodes = nodes.get({ returnType: "Object" });
+                for (nodeId in allNodes) {
                     nodeColors[nodeId] = allNodes[nodeId].color;
-                  }
-                  allEdges = edges.get({ returnType: "Object" });
-                  // adding nodes and edges to the graph
-                  data = {nodes: nodes, edges: edges};
+                }
+                allEdges = edges.get({ returnType: "Object" });
+                // adding nodes and edges to the graph
+                data = { nodes: nodes, edges: edges };
 
-                  var options = {
-    "configure": {
-        "enabled": true,
-        "filter": [
-            "physics"
-        ]
-    },
-    "edges": {
-        "color": {
-            "inherit": true
-        },
-        "smooth": {
-            "enabled": true,
-            "type": "dynamic"
-        }
-    },
-    "interaction": {
-        "dragNodes": true,
-        "hideEdgesOnDrag": false,
-        "hideNodesOnDrag": false
-    },
-    "physics": {
-        "barnesHut": {
-            "avoidOverlap": 0,
-            "centralGravity": 0.3,
-            "damping": 0.09,
-            "gravitationalConstant": -80000,
-            "springConstant": 0.001,
-            "springLength": 250
-        },
-        "enabled": true,
-        "forceAtlas2Based": {
-            "avoidOverlap": 0,
-            "centralGravity": 0.01,
-            "damping": 0.4,
-            "gravitationalConstant": -50,
-            "springConstant": 0.08,
-            "springLength": 100
-        },
-        "solver": "forceAtlas2Based",
-        "stabilization": {
-            "enabled": true,
-            "fit": true,
-            "iterations": 1000,
-            "onlyDynamicEdges": false,
-            "updateInterval": 50
-        }
-    }
-};
+                var options = {
+                    configure: {
+                        enabled: true,
+                        filter: ["physics"],
+                    },
+                    edges: {
+                        color: {
+                            inherit: true,
+                        },
+                        smooth: {
+                            enabled: true,
+                            type: "dynamic",
+                        },
+                    },
+                    interaction: {
+                        dragNodes: true,
+                        hideEdgesOnDrag: false,
+                        hideNodesOnDrag: false,
+                    },
+                    physics: {
+                        barnesHut: {
+                            avoidOverlap: 0,
+                            centralGravity: 0.3,
+                            damping: 0.09,
+                            gravitationalConstant: -80000,
+                            springConstant: 0.001,
+                            springLength: 250,
+                        },
+                        enabled: true,
+                        forceAtlas2Based: {
+                            avoidOverlap: 0,
+                            centralGravity: 0.01,
+                            damping: 0.4,
+                            gravitationalConstant: -50,
+                            springConstant: 0.08,
+                            springLength: 100,
+                        },
+                        solver: "forceAtlas2Based",
+                        stabilization: {
+                            enabled: true,
+                            fit: true,
+                            iterations: 1000,
+                            onlyDynamicEdges: false,
+                            updateInterval: 50,
+                        },
+                    },
+                };
 
-                  
+                // if this network requires displaying the configure window,
+                // put it in its div
+                options.configure["container"] =
+                    document.getElementById("config");
 
+                network = new vis.Network(container, data, options);
 
-                  
-                  // if this network requires displaying the configure window,
-                  // put it in its div
-                  options.configure["container"] = document.getElementById("config");
-                  
-
-                  network = new vis.Network(container, data, options);
-
-                  
-
-                  
-
-                  
-
-
-                  
-
-                  return network;
-
-              }
-              drawGraph();
+                return network;
+            }
+            drawGraph();
         </script>
     </body>
 </html>

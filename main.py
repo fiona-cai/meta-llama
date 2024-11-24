@@ -21,15 +21,15 @@ def main():
 
     # Define chat and embedding models for Groq
     chat_model = "groq"            # Use Groq for chat
-    #chat_model_name = "llama-3.1-70b-versatile" # Groq's chat model
+    chat_model_name = "llama-3.1-70b-versatile" # Groq's chat model
     #chat_model_name = "llama3-groq-70b-8192-tool-use-preview" # Groq's chat model
-    chat_model_name= "llama-3.2-3b-preview"
+    #chat_model_name= "llama-3.2-3b-preview"
     #chat_model_name = "llama-3.1-8b-instant" # Groq's chat model
     #chat_model = "ollama"            # Use Groq for chat
     #chat_model_name = "llama3.2:latest" # Groq's chat model
     
     # Add vision model configuration
-    vision_model_name = "llama-3.2-11b-vision-preview"
+    vision_model_name = "llama-3.2-90b-vision-preview"
     
     # Define embedding model for Groq
     embedding_model = "ollama"      # Choose 'openai' or 'ollama' for embeddings
@@ -79,32 +79,9 @@ def main():
             continue
 
         # Check if request requires visual processing
-        vision_response = memory_manager.check_visual_request(new_prompt)
-        if vision_response:
-            print(f"Vision check result: {vision_response.is_visual}")
-            print(f"Reasoning: {vision_response.reasoning}")
-
-            if vision_response.is_visual:
-                try:
-                    response = memory_manager.process_visual_request(new_prompt, image_path)
-                    print(Fore.CYAN + "\nAssistant (Vision): " + response + Style.RESET_ALL)
-                    
-                    # Store vision interaction in memory
-                    combined_text = f"{new_prompt} {response}"
-                    concepts = memory_manager.extract_concepts(combined_text)
-                    new_embedding = memory_manager.get_embedding(combined_text)
-                    
-                    memory_manager.add_interaction(
-                        new_prompt,
-                        response,
-                        new_embedding,
-                        concepts,
-                        is_core_memory=False
-                    )
-                except Exception as e:
-                    print(f"Vision processing failed: {e}")
-                    # Fall back to regular processing
-                continue  # Skip regular processing if vision request was handled
+        vision_check = memory_manager.check_visual_request(new_prompt)
+        print(f"Vision check result: {vision_check.is_visual}")
+        print(f"Reasoning: {vision_check.reasoning}")
 
         # Regular memory processing path
         # Load recent context
@@ -115,21 +92,21 @@ def main():
         # Get relevant past interactions
         relevant_interactions = memory_manager.retrieve_relevant_interactions(processed_prompt, exclude_last_n=5)
 
-        if vision_response.is_visual:
+        if vision_check.is_visual:
             try:
                 response = memory_manager.process_visual_request(new_prompt, image_path)
                 print(Fore.CYAN + "\nAssistant (Vision): " + response + Style.RESET_ALL)
                 
-                # Store vision interaction in memory
-                combined_text = f"{new_prompt} {response}"
+                # Format the vision interaction with proper JSON structure
+                combined_text = f"Visual Request: {new_prompt}\nResponse: {response}"
                 concepts = memory_manager.extract_concepts(combined_text)
                 new_embedding = memory_manager.get_embedding(combined_text)
                 
                 memory_manager.add_interaction(
-                    new_prompt,
-                    response,
-                    new_embedding,
-                    concepts,
+                    prompt=new_prompt,
+                    output=response,
+                    embedding=new_embedding,
+                    concepts=concepts,
                     is_core_memory=False
                 )
             except Exception as e:
