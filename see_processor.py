@@ -57,8 +57,6 @@ class SeeProcessor:
     def generate(self, image_path, audio_path):
         prompt, language = self.whispermodel.transcribe_audio(audio_path)
 
-        print(prompt)
-
         new_prompt = prompt #input(Fore.GREEN + "\nYou: " + Style.RESET_ALL).strip()
 
         # Check for core memory update first

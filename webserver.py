@@ -15,8 +15,6 @@ async def post_handler(request):
         image_url = data['image_url']
         audio_url = data['audio_url']
 
-        print(audio_url)
-
         print(not audio_url is None, not image_url is None)
 
         see_response = convert_and_process(audio_url, image_url)
