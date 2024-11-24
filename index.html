@@ -121,14 +121,14 @@
             }
 
             try {
-                // Try to use the back camera
+                // Try to use the rear camera if available
                 const stream = await navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: { exact: "environment" } }
+                    video: { facingMode: "environment" }
                 });
                 currentStream = stream;
                 startStream(stream);
             } catch (error) {
-                // Fallback to the front camera or any camera
+                // Fallback to any available camera
                 const stream = await navigator.mediaDevices.getUserMedia({
                     video: true
                 });
