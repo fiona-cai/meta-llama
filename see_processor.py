@@ -55,7 +55,7 @@ class SeeProcessor:
         print("Welcome to the conversation! (Type 'exit' to end)")
 
     def generate(self, image_path, audio_path):
-        prompt, _ = self.whispermodel.transcribe_audio(audio_path)
+        prompt, language = self.whispermodel.transcribe_audio(audio_path)
 
         print(prompt)
 

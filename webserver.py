@@ -3,10 +3,9 @@ import base64
 from io import BytesIO
 from PIL import Image
 import numpy as np
-import cv2
+from moviepy import AudioFileClip
 import see_processor
 import os
-from pydub import AudioSegment
 
 processor = see_processor.SeeProcessor()
 
@@ -15,6 +14,8 @@ async def post_handler(request):
         data = await request.json()
         image_url = data['image_url']
         audio_url = data['audio_url']
+
+        print(audio_url)
 
         print(not audio_url is None, not image_url is None)
 
@@ -37,9 +38,10 @@ def convert_and_process(audio_data_url, image_data_url, audio_output="audio.wav"
             with open(temp_audio_file, "wb") as audio_file:
                 audio_file.write(audio_data)
 
-            # Convert .webm to .wav using pydub
-            audio = AudioSegment.from_file(temp_audio_file, format="webm")
-            audio.export(audio_output, format="wav")
+            # Convert .webm to .wav using MoviePy
+            audio_clip = AudioFileClip(temp_audio_file)
+            audio_clip.write_audiofile(audio_output)  # Write as .wav
+            audio_clip.close()  # Always close the clip after processing
             audio_absolute_path = os.path.abspath(audio_output)
             print(f"Audio saved as {audio_absolute_path}.")
         else:
