@@ -190,11 +190,11 @@
                         if (!response.ok) {
                             throw new Error("Network response was not ok");
                         }
-                        return response.text();
+                        return response.json();
                     })
                     .then((data) => {
                         console.log("API Response:", data);
-                        apiResponseElement.textContent = data;
+                        apiResponseElement.textContent = data.see_response;
                     })
                     .catch((error) => {
                         console.error("Error calling /api/detect:", error);

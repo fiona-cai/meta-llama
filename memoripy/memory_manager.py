@@ -458,7 +458,7 @@ class MemoryManager:
                 completion = self.groq_client.chat.completions.create(
                     model=self.chat_model_name,
                     messages=messages,
-                    temperature=0.7,
+                    temperature=0.0,
                     max_tokens=1024,
                     top_p=1,
                     stream=False
@@ -563,7 +563,7 @@ class MemoryManager:
                         ]
                     }
                 ],
-                temperature=0.7,
+                temperature=0.0,
                 max_tokens=1024,
                 top_p=1,
                 stream=False

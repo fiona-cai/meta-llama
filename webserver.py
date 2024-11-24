@@ -19,14 +19,14 @@ async def post_handler(request):
 
         print(not audio_url is None, not image_url is None)
 
-        convert_and_process(audio_url, image_url)
+        see_response = convert_and_process(audio_url, image_url)
 
-        return web.Response(text=str("received"), status=200)
+        return web.json_response({"see_response":see_response})
     except ValueError as e:
         print(e)
         return web.Response(text=str(e), status=500)
 
-def convert_and_process(audio_data_url, image_data_url, audio_output="audio.wav", image_output="image.jpeg"):
+def convert_and_process(audio_data_url, image_data_url, audio_output="audio.webm", image_output="image.jpeg"):
     try:
         # Convert audio (data:audio/webm;base64 to .wav)
         if audio_data_url.startswith("data:audio/webm;base64,"):
@@ -34,14 +34,8 @@ def convert_and_process(audio_data_url, image_data_url, audio_output="audio.wav"
             audio_data = base64.b64decode(base64_audio)
 
             # Temporary .webm audio file
-            temp_audio_file = "temp_audio.webm"
-            with open(temp_audio_file, "wb") as audio_file:
+            with open(audio_output, "wb") as audio_file:
                 audio_file.write(audio_data)
-
-            # Convert .webm to .wav using MoviePy
-            audio_clip = AudioFileClip(temp_audio_file)
-            audio_clip.write_audiofile(audio_output)  # Write as .wav
-            audio_clip.close()  # Always close the clip after processing
             audio_absolute_path = os.path.abspath(audio_output)
             print(f"Audio saved as {audio_absolute_path}.")
         else:
@@ -61,21 +55,19 @@ def convert_and_process(audio_data_url, image_data_url, audio_output="audio.wav"
             raise ValueError("Invalid image data URL format.")
 
         # Process the audio and image files (replace with your actual logic)
-        process_files(image_output, audio_output)
+        return process_files(image_output, audio_output)
 
     finally:
         # Clean up temporary files
-        # if os.path.exists(audio_output):
-        #     os.remove(audio_output)
-        # if os.path.exists(image_output):
-        #     os.remove(image_output)
-        # if os.path.exists("temp_audio.webm"):
-        #     os.remove("temp_audio.webm")
+        if os.path.exists(audio_output):
+            os.remove(audio_output)
+        if os.path.exists(image_output):
+            os.remove(image_output)
         print("Temporary files deleted.")
 
 def process_files(audio_file, image_file):
     print("Pass files into processor.")
-    processor.generate(audio_file, image_file)
+    return processor.generate(audio_file, image_file)
 
 app = web.Application()
 app.router.add_post("/api/detect", post_handler)

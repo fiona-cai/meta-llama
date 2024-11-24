@@ -124,3 +124,5 @@ class SeeProcessor:
                 concepts,
                 is_core_memory=False
             )
+
+        return response
