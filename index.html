@@ -122,24 +122,27 @@
 
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({
-                    video: true,
+                    video: {
+                        facingMode: "user" /* Use the front camera if available, fallback to rear camera */
+                    },
                 });
                 currentStream = stream;
-
-                const videoTrack = stream.getVideoTracks()[0];
-                const settings = videoTrack.getSettings();
-                canvas.width = settings.width || 640;
-                canvas.height = settings.height || 480;
 
                 const video = document.createElement("video");
                 video.srcObject = stream;
                 video.play();
+                video.onloadedmetadata = () => {
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
 
-                function drawFrame() {
-                    context.drawImage(video, 0, 0, canvas.width, canvas.height);
-                    requestAnimationFrame(drawFrame);
-                }
-                drawFrame();
+                    function drawFrame() {
+                        if (currentStream) {
+                            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                            requestAnimationFrame(drawFrame);
+                        }
+                    }
+                    drawFrame();
+                };
             } catch (error) {
                 alert("Error accessing webcam: " + error.message);
             }
