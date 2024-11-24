@@ -28,7 +28,6 @@ class WhisperTranscriber:
         segments, info = self.model.transcribe(file_path, beam_size=5)
         print(f"Detected language '{info.language}' with probability {info.language_probability:.2f}")
         full_transcription = " ".join([segment.text for segment in segments])
-        os.remove(file_path)
         print(f"Transcription: {full_transcription}")
         return full_transcription, info.language
 
