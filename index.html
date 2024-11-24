@@ -6,20 +6,33 @@
         <title>Image Processing</title>
         <style>
             body {
-                font-family: Arial, sans-serif;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                padding: 20px;
                 margin: 0;
+                padding: 0;
+                font-family: Arial, sans-serif;
                 background-color: #f4f4f4;
             }
-            h2 {
-                text-align: center;
-                color: #333;
+            #canvas-container {
+                position: relative;
+                display: flex;
+                justify-content: top;
+                align-items: center;
+                height: 100vh;
+                overflow: hidden;
+                background-color: #000;
+            }
+            canvas {
+                display: block;
+                width: 80vw;
+                height: 80vh;
+            }
+            #controls {
+                position: absolute;
+                top: 10px;
+                display: flex;
+                gap: 10px;
+                z-index: 10;
             }
             button {
-                margin: 10px;
                 padding: 10px 20px;
                 font-size: 16px;
                 cursor: pointer;
@@ -32,23 +45,13 @@
             button:hover {
                 background-color: #0056b3;
             }
-            video {
-                width: 100%;
-                max-width: 500px;
-                margin-top: 20px;
-                border-radius: 5px;
-                border: 2px solid #ddd;
-            }
             #response-container {
-                margin-top: 20px;
-                width: 100%;
-                max-width: 600px;
-                background-color: #fff;
+                margin: 0;
                 padding: 20px;
-                border-radius: 5px;
-                box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+                background-color: #fff;
                 color: #333;
                 font-size: 14px;
+                box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
             }
             #response-container pre {
                 white-space: pre-wrap;
@@ -63,31 +66,29 @@
         </style>
     </head>
     <body>
-        <h2>Stream Webcam</h2>
-        <button id="start-front-camera" onclick="startWebcam('user')">
-            Start Front Camera
-        </button>
-        <button id="start-back-camera" onclick="startWebcam('environment')">
-            Start Back Camera
-        </button>
-        <button id="start-recording" onclick="startRecording()">
-            Record Audio
-        </button>
-        <button id="send-frame" onclick="sendFrame()">Send Frame</button>
-        <video id="webcam" autoplay playsinline></video>
-
+        <div id="canvas-container">
+            <p
+                id="accessible-text"
+                style="position: absolute; clip: rect(0, 0, 0, 0)"
+            >
+                Live video feed from the camera.
+            </p>
+            <canvas id="webcam-canvas"></canvas>
+            <div id="controls">
+                <button id="start-recording">Record Audio</button>
+                <button id="send-frame">Send Frame</button>
+            </div>
+        </div>
         <div id="response-container">
             <h3>API Response:</h3>
             <pre id="api-response">No response yet.</pre>
         </div>
 
         <script>
-            const video = document.getElementById("webcam");
+            const accessible_text = document.getElementById("accessible-text");
+            const canvas = document.getElementById("webcam-canvas");
+            const context = canvas.getContext("2d");
             const apiResponseElement = document.getElementById("api-response");
-            const startFrontCameraButton =
-                document.getElementById("start-front-camera");
-            const startBackCameraButton =
-                document.getElementById("start-back-camera");
             const startRecordingButton =
                 document.getElementById("start-recording");
             const sendFrameButton = document.getElementById("send-frame");
@@ -97,29 +98,38 @@
             let audioChunks = [];
             let audioDataURL = "";
 
-            const startWebcam = async (facingMode = "user") => {
+            const startWebcam = async () => {
                 if (location.protocol !== "https:") {
                     alert("Webcam access requires HTTPS");
                     return;
                 }
 
-                if (currentStream) {
-                    currentStream.getTracks().forEach((track) => track.stop());
-                }
-
                 try {
                     const stream = await navigator.mediaDevices.getUserMedia({
-                        video: { facingMode },
+                        video: true,
                     });
-                    video.srcObject = stream;
                     currentStream = stream;
-                    if (facingMode === "user") {
-                        startFrontCameraButton.textContent =
-                            "Front Camera Started";
-                    } else {
-                        startBackCameraButton.textContent =
-                            "Back Camera Started";
+
+                    const videoTrack = stream.getVideoTracks()[0];
+                    const settings = videoTrack.getSettings();
+                    canvas.width = settings.width || 640;
+                    canvas.height = settings.height || 480;
+
+                    const video = document.createElement("video");
+                    video.srcObject = stream;
+                    video.play();
+
+                    function drawFrame() {
+                        context.drawImage(
+                            video,
+                            0,
+                            0,
+                            canvas.width,
+                            canvas.height
+                        );
+                        requestAnimationFrame(drawFrame);
                     }
+                    drawFrame();
                 } catch (error) {
                     alert("Error accessing webcam: " + error.message);
                 }
@@ -161,19 +171,7 @@
             };
 
             const sendFrame = () => {
-                const canvas = document.createElement("canvas");
-                const context = canvas.getContext("2d");
-
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
-
-                context.drawImage(video, 0, 0, canvas.width, canvas.height);
-                const dataURL = canvas.toDataURL("image/jpeg");
-
-                const positions = {
-                    0: [0, 0],
-                    1: [100, 100],
-                };
+                const imageDataURL = canvas.toDataURL("image/jpeg");
 
                 fetch("/api/detect", {
                     method: "POST",
@@ -181,9 +179,8 @@
                         "Content-Type": "application/json",
                     },
                     body: JSON.stringify({
-                        image_url: dataURL,
+                        image_url: imageDataURL,
                         audio_url: audioDataURL,
-                        positions: positions,
                     }),
                 })
                     .then((response) => {
@@ -194,13 +191,26 @@
                     })
                     .then((data) => {
                         console.log("API Response:", data);
-                        apiResponseElement.textContent = data.see_response;
+                        let text = data.see_response;
+                        apiResponseElement.textContent = text;
+                        accessible_text.textContent = text;
+
+                        const utterance = new SpeechSynthesisUtterance(text);
+                        const voices = speechSynthesis.getVoices();
+                        utterance.voice = voices[0];
+                        speechSynthesis.speak(utterance);
                     })
                     .catch((error) => {
                         console.error("Error calling /api/detect:", error);
                         apiResponseElement.textContent = `Error: ${error.message}`;
                     });
             };
+
+            startRecordingButton.addEventListener("click", startRecording);
+            sendFrameButton.addEventListener("click", sendFrame);
+
+            // Start the webcam automatically on page load
+            window.addEventListener("load", startWebcam);
         </script>
     </body>
 </html>
