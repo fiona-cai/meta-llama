@@ -1,8 +1,8 @@
-# "See" - Empowering Independence Through AI  
 <div style="margin: auto">
-  
-  <img src="https://github.com/user-attachments/assets/5d55bc9a-c010-459a-95e9-16bea5356944">
+  <img src="https://github.com/user-attachments/assets/bd5a2a0b-ef3e-4b73-9ce5-6521d7887bb3">
 </div>
+
+# <img src="https://github.com/user-attachments/assets/5d55bc9a-c010-459a-95e9-16bea5356944" width="36px"> "See" - Empowering Independence Through AI  
 
 Welcome to **"See"**, an AI-driven assistive tool designed to transform how visually impaired users interact with the world. Built at Meta’s first Llama Hackathon in Toronto, this project leverages Meta's open-source Llama models to provide a highly intuitive and personalized experience.  
 
